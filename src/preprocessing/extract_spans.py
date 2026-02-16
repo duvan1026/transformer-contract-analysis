@@ -1,39 +1,29 @@
+import sys
+from pathlib import Path
 import json
 import csv
-import re
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+# Añade la raíz del proyecto al path de Python para poder importar módulos desde "src"
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-RAW_DATA = BASE_DIR / "data" / "raw" / "CUAD_v1.json"
-OUTPUT_DATA = BASE_DIR / "data" / "processed" / "dataset_spans.csv"
-
-
-def split_id(full_id: str):
-    """Separa id_documento y categoria"""
-    return full_id.split("__", 1)
-
-def clean_text(text: str) -> str:
-    # Reemplaza saltos de línea múltiples por un espacio
-    text = re.sub(r"\n+", " ", text)
-
-    # Colapsa espacios múltiples en uno solo
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
-
+from src.config.paths import CUAD_JSON, DATASET_SPANS_CSV
+from src.utils.text_utils import split_id, clean_text
 
 def extract_spans():
+    """
+    Extrae spans desde el dataset CUAD en formato JSON y genera un CSV en formato largo,
+    donde cada fila representa un span individual.
+    """
 
     rows = []
 
-    with open(RAW_DATA, "r", encoding="utf-8") as f:
+    # Cargar JSON
+    with open(CUAD_JSON, "r", encoding="utf-8") as f:
         data = json.load(f)
 
+    # Recorrer estructura del dataset
     for document in data["data"]:
-
         for paragraph in document["paragraphs"]:
-
             for qa in paragraph["qas"]:
 
                 id_documento, categoria = split_id(qa["id"])
@@ -52,7 +42,7 @@ def extract_spans():
                         -1
                     ])
 
-                # Caso normal
+                # Caso con múltiples spans
                 else:
                     for answer in answers:
                         rows.append([
@@ -65,9 +55,8 @@ def extract_spans():
                         ])
 
     # Guardar CSV
-    with open(OUTPUT_DATA, "w", newline="", encoding="utf-8") as f:
-        # writer = csv.writer(f)
-
+    with open(DATASET_SPANS_CSV, "w", newline="", encoding="utf-8") as f:
+        
         # Crea un escritor CSV que usa comas como separadores y encierra automáticamente
         # cada campo entre comillas para manejar correctamente spans con comas o caracteres especiales
         writer = csv.writer(
@@ -87,5 +76,9 @@ def extract_spans():
 
         writer.writerows(rows)
 
-if __name__ == "__main__":
+def run():
     extract_spans()
+
+
+if __name__ == "__main__":
+    run()
