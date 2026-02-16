@@ -10,10 +10,17 @@ project-root/
 │       └── dataset_spans.csv
 │
 ├── src/
+│   ├── config/
+│   │   └── paths.py
+│   │
+│   ├── utils/
+│   │   └── text_utils.py
+│   │
 │   └── preprocessing/
 │       └── extract_spans.py
 │
 └── README.md
+
 ```
 
 
@@ -21,8 +28,9 @@ project-root/
 
 - **data/raw/**: contiene el dataset original sin modificar.
 - **data/processed/**: contiene datasets generados tras el preprocesamiento.
+- **src/config/**: configuración global del proyecto (rutas y constantes)
+- **src/utils/**:  funciones reutilizables de limpieza y manipulación de texto
 - **src/preprocessing/**: scripts de procesamiento de datos.
-- **extract_spans.py**: script encargado de extraer spans y generar el CSV final.
 
 ---
 
@@ -53,7 +61,7 @@ Columnas:
 - **span_text**: texto exacto del span
 - **offset**: posición inicial del span en el documento
 
-El CSV utiliza:
+Características del CSV:
 
 - delimitador por comas
 - comillas automáticas en todos los campos
@@ -62,3 +70,17 @@ El CSV utiliza:
 Esto garantiza compatibilidad con Excel y herramientas de análisis.
 
 ---
+
+### Ejecución
+
+Para generar el dataset procesado:
+
+```
+python src/preprocessing/extract_spans.py
+```
+
+El script:
+- lee el JSON desde **data/raw/**
+- genera el CSV en **data/processed/**
+
+
