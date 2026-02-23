@@ -24,9 +24,10 @@ Ejemplos típicos de formulación:
 * Menciones acompañadas de exclusiones de conflicto de leyes (“without regard to conflict of laws”).
 
 ### **No incluye:**
-No se clasifican como Governing Law aquellos fragmentos que no permitan identificar explícitamente la ley que rige el contrato en su totalidad.
+No se clasifican como Governing Law aquellos fragmentos que no permitan identificar explícitamente la ley que rige el contrato en su totalidad, .
 
-No se clasifican como Governing Law los fragmentos que:
+En particular, quedan excluidos aquellos fragmentos que:
+
 * Mencionen una ley únicamente para describir el estatus legal de una entidad o una obligación específica.
 * No permitan identificar claramente qué ley rige el contrato en su totalidad.
 
