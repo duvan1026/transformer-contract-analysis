@@ -83,4 +83,6 @@ El script:
 - lee el JSON desde **data/raw/**
 - genera el CSV en **data/processed/**
 
+Para profundizar en los detalles de la taxonomia, revisar [docs/taxonomy.md](docs/taxonomy.md)
+
 
