@@ -95,3 +95,56 @@ Esto incluye fragmentos que contengan expresiones como:
 
 También se incluyen los casos en los que la terminación se puede ejercer mediante notificación escrita y la decisión depende únicamente de una de las partes.
 
+---
+
+## **3. Derechos de auditoria (Audit Rigth)**
+
+### **Definición:**
+
+Cláusulas contractuales que otorgan a una de las partes el derecho a auditar, inspeccionar o revisar los libros, registros o información de la otra parte con el fin de verificar el cumplimiento de las obligaciones establecidas en el contrato, incluyendo pagos, actividades o desempeño contractual.
+
+### **Criterio Semántico Central**
+
+El fragmento debe indicar explícitamente que una de las partes puede auditar, inspeccionar o acceder a registros o libros de la otra parte.
+
+En el dataset, esta intención aparece mediante formulaciones como:
+
+Ejemplos extraídos del dataset:
+
+* “Google may audit Distributor's relevant records to confirm Distributor's compliance with this Agreement.”
+* “to inspect and audit the applicable records and books maintained by Valeant relating to the Valeant Activities”
+* “to inspect and audit the applicable records and books maintained by Dova for purposes of verifying Dova's payment obligations”
+* “Dova's audit rights shall include interviewing Sales Representatives and other employees of Valeant.”
+* “make available for inspection the records”
+
+Estas formulaciones indican que una parte tiene autorización formal para revisar información de la otra parte.
+
+### **Incluye:**
+
+Se clasifican como Audit Rights los fragmentos que otorguen explícitamente el derecho de auditar o inspeccionar registros de la otra parte.
+
+Patrones lingüísticos reales identificados en el dataset:
+
+* “may audit … records”
+* “right … to inspect and audit … records and books”
+* “inspect and audit the applicable records and books”
+* “audit rights shall include …”
+* “make available for inspection the records”
+* “inspect and audit … books of account”
+
+También se incluyen fragmentos donde el derecho de auditoría tenga como propósito explícito:
+
+* verificar cumplimiento del contrato
+Ejemplo:
+“may audit Distributor's relevant records to confirm Distributor's compliance with this Agreement”
+
+* verificar obligaciones de pago
+Ejemplo:
+“to inspect and audit the applicable records and books maintained by Dova for purposes of verifying Dova's payment obligations”
+
+* confirmar la exactitud o integridad de registros
+Ejemplo:
+“to confirm the accuracy and completeness of such records and books of account”
+
+
+
