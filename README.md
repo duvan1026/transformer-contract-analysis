@@ -83,6 +83,13 @@ El script:
 - lee el JSON desde **data/raw/**
 - genera el CSV en **data/processed/**
 
-Para profundizar en los detalles de la taxonomia, revisar [docs/taxonomy.md](docs/taxonomy.md)
+
+## Taxonomía Contractual
+
+El proceso de extracción se basa en una taxonomía técnica diseñada para estandarizar la identificación de cláusulas. Esta taxonomía define los criterios semánticos y patrones lingüísticos para 5 categorías clave, incluyendo la nueva estructura de **Limitación de Responsabilidad**.
+
+Para consultar las definiciones detalladas, criterios de inclusión/exclusión y ejemplos reales de cada categoría, diríjase a:
+
+**[Guía Detallada de Taxonomía Contractual](docs/taxonomy.md)**
 
 
