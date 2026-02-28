@@ -146,5 +146,81 @@ Ejemplo:
 Ejemplo:
 “to confirm the accuracy and completeness of such records and books of account”
 
+---
+
+## **4. No competencia (Non-compete)**
+
+### **Definición:**
+
+Cláusulas contractuales que restringen la capacidad de una de las partes para participar en actividades, negocios o relaciones comerciales que compitan directa o indirectamente con la otra parte o con el objeto del contrato.
+
+Estas restricciones pueden aplicarse durante la vigencia del contrato y, en muchos casos, durante un período posterior a su terminación.
+
+### **Criterio Semántico Central**
+
+El fragmento debe indicar explícitamente que una de las partes no puede competir, participar en negocios competidores, desarrollar productos competidores o colaborar con competidores.
+
+En el dataset, esta intención aparece mediante formulaciones reales como:
+
+Ejemplos reales extraídos de los spans:
+
+* “will not … engage in any enterprise or business … which manufactures … develops, markets, or sells products falling within the Field of Agreement” 
+
+* “ISA agrees not to … engage or have a financial interest in any Rubicon Competing Business” 
+
+* “Distributor will not market … a computer program which competes in any way with the Products” 
+
+* “The Developer shall not develop, maintain or market a similar platform and will not compete with the Client” 
+
+* “Endorser's duty not to compete with the business of MusclePharm shall continue for a period of one year” 
+
+* “no Participant will engage in any business … that might be competitive with the business of the Joint Venture” 
 
 
+Estas formulaciones indican una prohibición directa de competir o participar en actividades competidoras.
+
+### **Incluye:**
+
+Se clasifican como Non-Compete los fragmentos que establezcan restricciones explícitas como:
+
+#### **1. Prohibición de participar en negocios competidores**
+    
+Ejemplos:
+
+* “will not … engage in any enterprise or business … which manufactures … develops, markets, or sells products falling within the Field of Agreement” 
+
+* “not … engage or have a financial interest in any … Competing Business”
+
+#### **2. Prohibición de desarrollar, vender o comercializar productos competidores**
+
+Ejemplos:
+
+* “Distributor will not market … a computer program which competes in any way with the Products” 
+
+* “Surgical shall not promote, market or sell any products … which directly or indirectly compete with the Product” 
+
+#### **3. Prohibición de desarrollar o mantener productos o tecnologías competidoras**
+
+Esto ocurre cuando una parte no puede crear o mantener soluciones similares.
+
+Ejemplos:
+
+* “The Developer shall not develop, maintain or market a similar platform and will not compete with the Client”
+
+#### **4. Prohibición de tener interés financiero o participación en competidores**
+
+Incluye restricciones sobre inversión, propiedad o participación económica.
+
+Ejemplos:
+
+* “ISA agrees not to … have a financial interest in any Rubicon Competing Business”
+
+---
+
+## **5. No competencia (Non-compete)**
+
+### **Definición:**
+
+### **Criterio Semántico Central**
+
+### **Incluye:**
