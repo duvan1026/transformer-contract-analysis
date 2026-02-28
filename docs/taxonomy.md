@@ -217,10 +217,58 @@ Ejemplos:
 
 ---
 
-## **5. No competencia (Non-compete)**
+## **5. Limitación de responsabilidad (Limitation of Liability)**
+
+**Nota**: Esta categoría unifica las categorías originales de CUAD **Cap on Liability** y **Uncapped Liability**, ya que ambas definen el alcance de la responsabilidad legal de las partes, ya sea estableciendo un límite máximo o indicando excepciones donde la responsabilidad no está limitada.
 
 ### **Definición:**
 
+Cláusulas contractuales que definen el alcance cuantitativo de la responsabilidad económica de las partes, estableciendo límites máximos de indemnización (caps) o declarando explícitamente las situaciones, conductas o materias en las que dicha responsabilidad no tiene límite financiero (uncapped).
+
 ### **Criterio Semántico Central**
 
+El fragmento debe indicar una restricción monetaria mediante sumas fijas, porcentajes o fórmulas, o bien establecer una excepción donde la limitación de responsabilidad no aplica.
+
+En el dataset, esta intención aparece mediante formulaciones como:
+
+Ejemplos extraídos del dataset:
+
+* "each party's total liability... is limited to the greater of: (a) [ * ] Euros... and (b) [ * ]% of the total payment due"
+* "Nothing in this Agreement shall exclude or limit either party's liability for... fraud or fraudulent misrepresentation"
+* "total liquidated damages as per this Section shall not exceed 5% of the Product Price."
+* "this Subsection will not limit the liability of a Party for... infringement by the Party on the intellectual property"
+* "liability for damages... shall be limited to one (1) month's fees and the remaining portion of any prepaid fees."
+
+Estas formulaciones indican o bien un techo financiero o la preservación de la responsabilidad plena ante eventos específicos.
+
 ### **Incluye:**
+
+Se clasifican bajo esta categoría los fragmentos que definen el alcance monetario de la responsabilidad, ya sea estableciendo un techo máximo o señalando las excepciones donde dicho techo desaparece.
+
+#### **1. Limitaciones Cuantitativas (Caps):**
+
+Fragmentos que restringen el resarcimiento mediante sumas fijas, variables o porcentuales. Patrones reales identificados:
+
+* “total liability... is limited to the greater of...”
+* “shall not exceed the lesser of $50,000... or the amount paid”
+* “liability... shall be limited to [**] US Dollars”
+* “maximum liability... shall be limited to the amount of fees paid”
+* “not exceed 5% of the Product Price”
+
+#### **2. Excepciones a la Limitación (Uncapped Liability):**
+
+Fragmentos que declaran que el límite no es aplicable o que la responsabilidad es plena debido a la naturaleza de la conducta o la materia. Patrones reales identificados:
+
+* “Nothing in this Agreement shall exclude or limit... liability for...”
+* “this Subsection will not limit the liability of a Party for...”
+* “provided however that such limitation shall not apply to the extent...”
+* “EXCEPT IN THE EVENT OF... WILLFUL MISCONDUCT OR FRAUD...”
+
+#### **3. Supuestos específicos de responsabilidad ilimitada:**
+
+Se incluyen aquellos fragmentos donde se especifica que la limitación no protege los siguientes activos críticos:
+
+* Integridad física: “death or personal injury resulting from the negligence”
+* Propiedad Intelectual: “infringement by the Party on the intellectual property”
+* Indemnidades: “liability under Clause 10 (Indemnities)”
+* Confidencialidad: “unauthorized disclosure or use... of Confidential Information”
