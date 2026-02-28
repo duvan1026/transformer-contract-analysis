@@ -73,6 +73,12 @@ Esto garantiza compatibilidad con Excel y herramientas de análisis.
 
 ### Ejecución
 
+Antes de ejecutar los scripts, instala las dependencias necesarias:
+
+```bash
+pip install pandas openpyxl
+```
+
 Para generar el dataset procesado:
 
 ```
