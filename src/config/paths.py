@@ -32,6 +32,10 @@ CUAD_JSON = RAW_DATA_DIR / "CUAD_v1.json"
 
 DATASET_SPANS_CSV = PROCESSED_DATA_DIR / "dataset_spans.csv"
 
+CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
+
+DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
+
 # ==============================
 # Directorios futuros 
 # ==============================
