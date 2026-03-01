@@ -11,54 +11,50 @@ from src.config.paths import (
     DATASET_TAXONOMY_CSV
 )
 
-from src.utils.text_utils import normalize_category
+from src.utils.category_utils import (
+    load_category_mapping,
+    normalize_categories_column,
+    apply_category_mapping
+)
 
+def run():
+    """
+    Aplica la homologación de categorías definida en la taxonomía
+    al dataset de spans extraído desde CUAD.
 
-def load_mapping():
-    df = pd.read_excel(CATEGORY_MAPPING_FILE)
+    Flujo:
+    1. Cargar dataset original de spans
+    2. Normalizar nombres de categorías
+    3. Cargar archivo de homologación
+    4. Filtrar y mapear a las categorías finales
+    5. Guardar el dataset listo para entrenamiento
+    """
 
-    df = df[df["Usar"] == "Sí"]
-
-    df["Category"] = df["Category"].apply(normalize_category)
-    df["Final Name Category"] = df["Final Name Category"].apply(normalize_category)
-
-
-    # Crear diccionario
-    mapping = dict(
-        zip(
-            df["Category"],
-            df["Final Name Category"]
-        )
-    )
-
-    return mapping
-
-
-def apply_mapping():
-
-    print("Loading dataset_spans.csv...")
+    # 1. Cargar dataset original
     spans = pd.read_csv(DATASET_SPANS_CSV)
 
-    spans["categoria"] = spans["categoria"].apply(normalize_category)
+    # 2. Normalizar categorías para evitar inconsistencias de formato
+    spans = normalize_categories_column(
+        spans,
+        "categoria"
+    )
 
-    mapping = load_mapping()
+    # 3. Cargar mapping definido en el archivo de taxonomía
+    mapping = load_category_mapping(
+        CATEGORY_MAPPING_FILE
+    )
 
-    spans = spans[
-        spans["categoria"].isin(mapping.keys())
-    ]
+    # 4. Filtrar categorías seleccionadas y aplicar homologación
+    spans = apply_category_mapping(
+        spans,
+        mapping
+    )
 
-    spans["categoria_original"] = spans["categoria"]
-
-    spans["categoria"] = spans["categoria"].map(mapping)
-
+    # 5. Guardar dataset final
     spans.to_csv(
         DATASET_TAXONOMY_CSV,
         index=False
     )
-
-
-def run():
-    apply_mapping()
 
 
 if __name__ == "__main__":
