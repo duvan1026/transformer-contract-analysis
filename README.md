@@ -1,13 +1,18 @@
 ## Estructura del repositorio
 
 ```
-project-root/
+project/
 │
 ├── data/
 │   ├── raw/
 │   │   └── CUAD_v1.json
+│   │   └── category_mapping.xlsx
+│   │
 │   └── processed/
 │       └── dataset_spans.csv
+│
+├── docs/
+│   ├── dataset_report.txt
 │
 ├── src/
 │   ├── config/
@@ -15,9 +20,12 @@ project-root/
 │   │
 │   ├── utils/
 │   │   └── text_utils.py
+│   │   └── category_utils.py
 │   │
 │   └── preprocessing/
 │       └── extract_spans.py
+│       └── validate_dataset.py
+│       └── validate_dataset.py
 │
 └── README.md
 
@@ -28,6 +36,7 @@ project-root/
 
 - **data/raw/**: contiene el dataset original sin modificar.
 - **data/processed/**: contiene datasets generados tras el preprocesamiento.
+- **docs/:** contiene reportes y documentación del dataset.
 - **src/config/**: configuración global del proyecto (rutas y constantes)
 - **src/utils/**:  funciones reutilizables de limpieza y manipulación de texto
 - **src/preprocessing/**: scripts de procesamiento de datos.
@@ -46,7 +55,17 @@ El script `extract_spans.py` procesa el archivo JSON de CUAD siguiendo estos pas
 6. Limpia el texto para evitar problemas de formato en CSV.
 7. Guarda el dataset procesado en formato CSV.
 
----
+### Ejecución:
+
+```bash
+python src/preprocessing/extract_spans.py
+```
+
+### Salida:
+
+```
+data/processed/dataset_spans.csv
+```
 
 ## Formato del Dataset Generado
 
@@ -61,102 +80,118 @@ Columnas:
 - **span_text**: texto exacto del span
 - **offset**: posición inicial del span en el documento
 
-Características del CSV:
-
-- delimitador por comas
-- comillas automáticas en todos los campos
-- codificación UTF-8
-
-Esto garantiza compatibilidad con Excel y herramientas de análisis.
-
 ---
 
-## Taxonomía Contractual
+## Aplicación de la Taxonomía Contractual
 
-El proceso de extracción se basa en una taxonomía técnica diseñada para estandarizar la identificación de cláusulas. Esta taxonomía define los criterios semánticos y patrones lingüísticos para 5 categorías clave, incluyendo la nueva estructura de **Limitación de Responsabilidad**.
+El script apply_category_mapping.py aplica la taxonomía definida y genera el dataset final para entrenamiento.
 
-Para consultar las definiciones detalladas, criterios de inclusión/exclusión y ejemplos reales de cada categoría, diríjase a:
-
-**[Guía Detallada de Taxonomía Contractual](docs/taxonomy.md)**
-
----
-
-## Guía de ejecución
-
-Sigue los siguientes pasos para generar el dataset de trabajo a partir del dataset original CUAD:
-
-### 1. Preparar el entorno
-
-Asegúrate de tener instaladas las dependencias necesarias:
-
-```bash
-pip install pandas openpyxl
-```
-
-El archivo original debe estar ubicado en:
-
-```
-data/raw/CUAD_v1.json
-```
-
-Y el archivo de homologación de categorías en:
-
-```
-data/raw/category_mapping.xlsx
-```
-
-### 2. Extraer los spans desde CUAD
-
-Este paso transforma el JSON original en un CSV donde cada fila corresponde a un fragmento (span) anotado.
-
-```
-python src/preprocessing/extract_spans.py
-```
-
-Salida generada:
-
-```
-data/processed/dataset_spans.csv
-```
-
-Este archivo contiene:
-
-* id_documento
-* categoria original de CUAD
-* question
-* is_impossible
-* span_text
-* offset
-
-### 3. Aplicar la taxonomía y homologación de categorías
-
-Este paso:
+Este proceso:
 
 * filtra únicamente las categorías seleccionadas
-* unifica categorías (por ejemplo, Cap on Liability y Uncapped Liability → Limitation of Liability)
-* normaliza los nombres de categorías
-* genera el dataset final para entrenamiento
+* elimina registros sin spans válidos (is_impossible = True)
+* unifica categorías según la taxonomía
+* conserva la categoría original para trazabilidad
+* elimina columnas no necesarias para el entrenamiento (question, is_impossible)
+
+Ejecución:
 
 ```
 python src/preprocessing/apply_category_mapping.py
 ```
 
-Salida generada:
+Salida:
+
+```
+data/processed/dataset_taxonomy.csv
+```
+---
+
+## Formato del Dataset Final (dataset_taxonomy.csv)
+
+Este es el dataset utilizado para entrenar el modelo.
+
+Cada fila representa un span válido.
+
+Columnas:
+
+* **id_documento** → identificador del contrato
+* **categoria** → categoría final según la taxonomía
+* **span_text** → texto exacto de la cláusula
+* **offset** → posición dentro del documento
+* **categoria_original** → categoría original en CUAD
+
+Características:
+
+* solo contiene spans válidos
+* categorías completamente homologadas
+* mantiene trazabilidad hacia la categoría original
+
+---
+
+## Validación del Dataset
+
+El script validate_dataset.py genera un reporte con estadísticas del dataset final.
+
+Incluye:
+
+* número total de spans
+* número total de contratos
+* distribución de spans por categoría
+* número de categorías presentes por contrato
+
+Ejecución:
+
+```
+python src/evaluation/validate_dataset.py
+```
+Salida:
+
+```
+docs/dataset_report.txt
+```
+
+Este reporte permite verificar la calidad y cobertura del dataset antes del entrenamiento.
+
+---
+
+## Taxonomía Contractual
+
+La taxonomía define las 5 categorías utilizadas en el entrenamiento del modelo:
+
+* Limitation of Liability
+* Audit Rights
+* Governing Law
+* Non-Compete
+* Termination for Convenience
+
+Incluye criterios semánticos y reglas de homologación desde las categorías originales de CUAD.
+
+Para más detalles: **[Guía Detallada de Taxonomía Contractual](docs/taxonomy.md)**
+
+---
+
+## Flujo completo de generación del dataset
+
+Orden recomendado de ejecución:
+
+```
+# 1. Extraer spans desde CUAD
+python src/preprocessing/extract_spans.py
+
+# 2. Aplicar taxonomía y generar dataset final
+python src/preprocessing/apply_category_mapping.py
+
+# 3. Validar dataset generado
+python src/evaluation/validate_dataset.py
+```
+
+Resultado final:
 
 ```
 data/processed/dataset_taxonomy.csv
 ```
 
-El archivo final contiene:
+Este archivo está listo para la partición experimental y el entrenamiento del modelo BERT.
 
-* id_documento
-* categoria (según la taxonomía definida)
-* categoria_original
-* span_text
-* offset
-* question
-* is_impossible
-
-Cada fila representa un fragmento contractual etiquetado.
-
-## ** To Do:** Documentar el archivo de configuracion para realizar el mapping de las categorias
+---

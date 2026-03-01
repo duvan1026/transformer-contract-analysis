@@ -1,0 +1,18 @@
+DATASET TAXONOMY REPORT
+========================================
+Total spans: 2451
+Total contratos únicos: 454
+
+Spans por categoría:
+limitation of liability: 839
+audit rights: 643
+governing law: 464
+non-compete: 259
+termination for convenience: 246
+
+Contratos por número de categorías:
+1 categorías: 80 contratos
+2 categorías: 131 contratos
+3 categorías: 115 contratos
+4 categorías: 99 contratos
+5 categorías: 29 contratos
