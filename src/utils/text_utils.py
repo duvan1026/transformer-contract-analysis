@@ -6,7 +6,7 @@ utilizadas en el pipeline de preprocessing del proyecto.
 """
 
 import re
-
+import pandas as pd
 
 def split_id(full_id: str) -> tuple[str, str]:
     """
@@ -54,3 +54,8 @@ def is_empty_text(text: str) -> bool:
     """
 
     return not text or text.strip() == ""
+
+def normalize_category(text):
+    if pd.isna(text):
+        return ""
+    return str(text).strip().lower()
