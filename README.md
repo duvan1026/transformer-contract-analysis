@@ -171,6 +171,43 @@ Para más detalles: **[Guía Detallada de Taxonomía Contractual](docs/taxonomy.
 
 ---
 
+## Mapeo de Etiquetas (Label Mapping)
+
+El modelo de clasificación requiere que las categorías textuales se representen mediante identificadores numéricos. 
+
+Para garantizar consistencia y reproducibilidad, el proyecto define un mapeo fijo entre cada categoría de la taxonomía y su identificador numérico.
+
+Este mapeo se encuentra en:
+
+```
+src/config/label_mapping.py
+```
+
+Ejemplo:
+
+```python
+LABEL2ID = {
+    "audit rights": 0,
+    "governing law": 1,
+    "limitation of liability": 2,
+    "non-compete": 3,
+    "termination for convenience": 4
+}
+
+ID2LABEL = {v: k for k, v in LABEL2ID.items()}
+```
+
+Este archivo:
+
+* define el espacio oficial de clases del modelo
+* asegura coherencia entre entrenamiento y evaluación
+* permite interpretar correctamente las predicciones del modelo
+
+**Importante**:
+Si la taxonomía cambia, el mapeo debe actualizarse y considerarse una nueva versión experimental.
+
+---
+
 ## Flujo completo de generación del dataset
 
 Orden recomendado de ejecución:
