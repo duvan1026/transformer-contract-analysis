@@ -1,0 +1,18 @@
+"""
+Mapping oficial de etiquetas para el experimento.
+
+Este archivo define la correspondencia fija entre
+nombre de categoría y su identificador numérico.
+
+Es crítico para garantizar reproducibilidad.
+"""
+
+LABEL2ID = {
+    "audit rights": 0,
+    "governing law": 1,
+    "limitation of liability": 2,
+    "non-compete": 3,
+    "termination for convenience": 4
+}
+
+ID2LABEL = {v: k for k, v in LABEL2ID.items()}
