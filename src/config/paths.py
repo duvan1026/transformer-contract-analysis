@@ -25,6 +25,8 @@ DOCS_DIR = BASE_DIR / "docs"
 
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
+SPLITS_DIR = PROCESSED_DATA_DIR / "splits"
+
 # ==============================
 # Archivos específicos
 # ==============================
@@ -38,6 +40,15 @@ CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
 DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
 
 DATASET_REPORT_FILE = DOCS_DIR / "dataset_report.txt"
+
+
+TRAIN_DATASET = SPLITS_DIR / "train.csv"
+
+VAL_DATASET = SPLITS_DIR / "validation.csv"
+
+TEST_DATASET = SPLITS_DIR / "test.csv"
+
+SPLIT_REPORT_FILE = SPLITS_DIR / "split_report.txt"
 
 # ==============================
 # Directorios futuros 
