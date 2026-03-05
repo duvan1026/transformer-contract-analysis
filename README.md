@@ -10,6 +10,13 @@ project/
 │   │
 │   └── processed/
 │       └── dataset_spans.csv
+│       ├── dataset_taxonomy.csv
+│       │
+│       └── splits/
+│           ├── train.csv
+│           ├── validation.csv
+│           ├── test.csv
+│           └── split_report.txt
 │
 ├── docs/
 │   ├── dataset_report.txt
@@ -24,7 +31,8 @@ project/
 │   │
 │   └── preprocessing/
 │       └── extract_spans.py
-│       └── validate_dataset.py
+│       ├── apply_category_mapping.py
+│       ├── split_dataset.py
 │       └── validate_dataset.py
 │
 └── README.md
@@ -35,7 +43,7 @@ project/
 ### Descripción de carpetas
 
 - **data/raw/**: contiene el dataset original sin modificar.
-- **data/processed/**: contiene datasets generados tras el preprocesamiento.
+- **data/processed/**: contiene datasets generados tras el preprocesamiento y las particiones de entrenamiento (splits).
 - **docs/:** contiene reportes y documentación del dataset.
 - **src/config/**: configuración global del proyecto (rutas y constantes)
 - **src/utils/**:  funciones reutilizables de limpieza y manipulación de texto
@@ -155,6 +163,44 @@ Este reporte permite verificar la calidad y cobertura del dataset antes del entr
 
 ---
 
+## Generación de Splits del Dataset
+
+El script **split_dataset.py** genera las particiones de **entrenamiento, validación y prueba** a partir del dataset final (dataset_taxonomy.csv).
+
+Características del proceso:
+
+* selecciona los N contratos más representativos
+* prioriza contratos con mayor número de categorías
+* utiliza proporciones configurables para train / validation / test
+* garantiza reproducibilidad mediante una semilla aleatoria
+
+Ejecución:
+
+```
+python src/preprocessing/split_dataset.py
+```
+
+Salida:
+
+```
+data/processed/splits/
+```
+
+Archivos generados:
+
+```
+train.csv
+validation.csv
+test.csv
+split_report.txt
+```
+
+El proceso genera un reporte automático con la información del split:
+
+* [Ver reporte de splits](data/processed/splits/split_report.txt)
+
+---
+
 ## Taxonomía Contractual
 
 La taxonomía define las 5 categorías utilizadas en el entrenamiento del modelo:
@@ -221,6 +267,9 @@ python src/preprocessing/apply_category_mapping.py
 
 # 3. Validar dataset generado
 python src/evaluation/validate_dataset.py
+
+# 4. Generar splits para entrenamiento
+python src/preprocessing/split_dataset.py
 ```
 
 Resultado final:
@@ -229,6 +278,6 @@ Resultado final:
 data/processed/dataset_taxonomy.csv
 ```
 
-Este archivo está listo para la partición experimental y el entrenamiento del modelo BERT.
+A partir de este dataset se generan los splits de entrenamiento, validación y prueba utilizados para entrenar el modelo BERT.
 
 ---
