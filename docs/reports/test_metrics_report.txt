@@ -1,0 +1,22 @@
+REPORTE DE EVALUACIÓN FINAL - ANÁLISIS CONTRACTUAL BERT
+============================================================
+Accuracy General: 0.9467
+
+                             precision    recall  f1-score   support
+
+               audit rights       0.93      1.00      0.97        56
+              governing law       1.00      1.00      1.00        17
+    limitation of liability       1.00      0.91      0.95        43
+                non-compete       0.90      0.90      0.90        21
+termination for convenience       0.85      0.85      0.85        13
+
+                   accuracy                           0.95       150
+                  macro avg       0.94      0.93      0.93       150
+               weighted avg       0.95      0.95      0.95       150
+
+============================================================
+GLOSARIO DE MÉTRICAS:
+- PRECISION: ¿Qué tan confiable es el modelo cuando detecta una cláusula? (Evita falsas alarmas).
+- RECALL: ¿Qué porcentaje de las cláusulas reales logramos capturar? (Evita omisiones legales).
+- F1-SCORE: El balance ideal entre precisión y captura (Métrica clave de éxito).
+- SUPPORT: Número total de muestras de esa categoría en el set de prueba.

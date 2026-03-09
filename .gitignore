@@ -217,3 +217,10 @@ __marimo__/
 
 # envirement python
 ml_env/
+
+# Ignorar modelos y pesos pesados
+models/bert_baseline/
+models/bert_final/
+*.bin
+*.safetensors
+*.pt
