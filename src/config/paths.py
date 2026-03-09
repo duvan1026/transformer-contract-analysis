@@ -42,10 +42,6 @@ VAL_DATASET = SPLITS_DIR / "validation.csv"
 TEST_DATASET = SPLITS_DIR / "test.csv"
 SPLIT_REPORT_FILE = SPLITS_DIR / "split_report.txt"
 
-EVALUATION_TEST_DIR = PROCESSED_DATA_DIR / "evaluation"
-TEST_DETAILED_RESULT = EVALUATION_TEST_DIR / "test_detailed_results.csv"
-CONFUSION_MATRIX = EVALUATION_TEST_DIR / "confusion_matrix.png"
-TEST_METRICS_REPORT = EVALUATION_TEST_DIR / "test_metrics_report.txt"
 
 # ==============================
 # MODELOS Y ENTRENAMIENTO (models/)
@@ -60,6 +56,10 @@ MODEL_BERT_CHECKPOINT = MODEL_BERT_BASELINE_DIR / "checkpoint-300"
 # RESULTADOS Y MÉTRICAS (docs)
 # ==============================
 
-DATASET_REPORT_FILE = DOCS_DIR / "dataset_report.txt"
+REPORTS_DIR = DOCS_DIR / "reports"
+DATASET_REPORT_FILE = REPORTS_DIR / "dataset_report.txt"
+TEST_DETAILED_RESULT = REPORTS_DIR / "test_detailed_results.csv"
+CONFUSION_MATRIX = REPORTS_DIR / "confusion_matrix.png"
+TEST_METRICS_REPORT = REPORTS_DIR / "test_metrics_report.txt"
 
 
