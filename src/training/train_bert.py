@@ -14,6 +14,7 @@ from transformers import (
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.training.bert_dataset import ContractDataset
+from src.config.label_mapping import MODEL_NAME, NUM_LABELS
 from src.config.paths import (
     TRAIN_DATASET, 
     VAL_DATASET, 
@@ -22,8 +23,8 @@ from src.config.paths import (
 )
 
 # 1. Configuración Centralizada
-MODEL_NAME = "bert-base-uncased"  # Usamos bert-base-uncased: 110M de parámetros, arquitectura balanceada para clasificación.
-NUM_LABELS = 5                    # Define la dimensión de la capa de salida (una neurona por categoría legal).
+MODEL_NAME = MODEL_NAME          # Usamos bert-base-uncased: 110M de parámetros, arquitectura balanceada para clasificación.
+NUM_LABELS = NUM_LABELS          # Define la dimensión de la capa de salida (una neurona por categoría legal).
 
 # 2. Tokenizer único para todos los sets
 # El Tokenizer debe ser idéntico al del modelo pre-entrenado para mantener el vocabulario.
