@@ -1,13 +1,17 @@
 import sys
 from pathlib import Path
 import numpy as np
+import random
+import numpy as np
+import torch
 from sklearn.metrics import accuracy_score, f1_score
 
 from transformers import (
     AutoModelForSequenceClassification, 
     AutoTokenizer, 
     Trainer, 
-    TrainingArguments
+    TrainingArguments,
+    set_seed # Herramienta de Hugging Face para fijar semillas en el Trainer
 )
 
 # Añadir raíz del proyecto
@@ -15,12 +19,33 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.training.bert_dataset import ContractDataset
 from src.config.label_mapping import MODEL_NAME, NUM_LABELS
+from src.config.training_config import RANDOM_SEED 
+
 from src.config.paths import (
     TRAIN_DATASET, 
     VAL_DATASET, 
     MODEL_BERT_BASELINE_DIR,
     MODEL_BERT_FINAL_DIR
 )
+
+
+def set_reproducibility(seed):
+    """
+    Bloquea todas las fuentes de aleatoriedad para garantizar 
+    que el entrenamiento sea idéntico en cada ejecución.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # Configuración para que PyTorch sea determinista en GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    # Semilla específica para las librerías de Hugging Face
+    set_seed(seed)
+
+# Ejecutamos la fijación de semilla antes de cargar nada
+set_reproducibility(RANDOM_SEED)
 
 # 1. Configuración Centralizada
 MODEL_NAME = MODEL_NAME          # Usamos bert-base-uncased: 110M de parámetros, arquitectura balanceada para clasificación.
@@ -68,6 +93,8 @@ model = AutoModelForSequenceClassification.from_pretrained(
 # 6. ESTRATEGIA DE ENTRENAMIENTO (HIPERPARÁMETROS)
 training_args = TrainingArguments(
     output_dir=MODEL_BERT_BASELINE_DIR, # Carpeta para guardar resultados intermedios
+    seed=RANDOM_SEED,                 #  SEGUNDO BLOQUEO: Semilla para el Trainer
+    data_seed=RANDOM_SEED,            #  Semilla para el barajado de datos (shuffling)
 
     # Optimización:
     learning_rate=2e-5,             # Velocidad de aprendizaje (ajuste fino y delicado)
@@ -77,7 +104,7 @@ training_args = TrainingArguments(
     weight_decay=0.01,               # Regularización para evitar que el modelo memorice (overfitting -cuando el modelo memoriza en lugar de aprender)
 
     # Monitoreo y Guardado:
-    eval_strategy="epoch",           # Evaluar el rendimiento al final de cada época
+    evaluation_strategy="epoch",     # Evaluar el rendimiento al final de cada época
     save_strategy="epoch",           # Guardar un punto de control (checkpoint) cada época
     logging_dir="logs",
     logging_steps=10,
@@ -98,7 +125,7 @@ trainer = Trainer(
 )
 
 # EJECUCIÓN Y PERSISTENCIA
-print("Iniciando entrenamiento...")
+print(f"Iniciando entrenamiento reproducible (Semilla: {RANDOM_SEED})...")
 trainer.train()
 
 # Guardado definitivo del modelo óptimo y su tokenizer asociado.
