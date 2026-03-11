@@ -2,6 +2,57 @@
 
 Este proyecto representa la implementación de un pipeline de procesamiento de lenguaje natural (NLP) para la clasificación automática de cláusulas legales. Utilizando el dataset CUAD, se ha diseñado un flujo de trabajo que abarca desde la extracción cruda de datos hasta el entrenamiento y la auditoría detallada de un modelo basado en la arquitectura BERT.
 
+## 0. Requisitos y Configuración del Entorno
+
+Para garantizar la reproducibilidad de los resultados y evitar conflictos de dependencias, se ha estandarizado el uso de Python 3.11.5.
+
+### 0.1 Instalar Python 3.11.5
+
+Si no tienes esta versión, descárgala e instálala desde el sitio oficial:
+
+* [Descargar Python 3.11.5 para Windows/Mac/Linux](https://www.python.org/downloads/release/python-3115/)
+
+Nota en Windows: Asegúrate de marcar la casilla "Add Python to PATH" durante la instalación.
+
+### A. Preparación del Ambiente Virtual
+
+Se recomienda encarecidamente el uso de un entorno virtual (venv) dentro de la carpeta del proyecto para aislar las librerías:
+
+```
+# 1. Crear el entorno virtual (asegúrate de tener Python 3.11 instalado en el equipo)
+py -3.11 -m venv .venv
+
+# 2. Activar el entorno
+# En Windows:
+.venv\Scripts\activate
+# En Linux/Unix (Supercomputadora):
+source .venv/bin/activate
+
+# 3. Actualizar pip e instalar dependencias
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**verificar:** ue estoy en la ruta d epyhton con la version correcta. sabiendo que: 
+
+### B. Archivo de Dependencias (requirements.txt)
+
+El proyecto utiliza las siguientes versiones base para asegurar la compatibilidad con los nodos del clúster:
+
+```
+torch==2.1.0
+transformers==4.35.0
+tokenizers==0.14.1
+accelerate==0.25.0
+huggingface_hub==0.17.3
+scikit-learn==1.3.0
+pandas==2.1.1
+numpy==1.26.0
+matplotlib==3.8.0
+seaborn==0.13.0
+openpyxl==3.1.5
+```
+
 ## 1. Estructura del repositorio
 
 El repositorio se ha organizado siguiendo principios de modularidad para separar claramente la lógica de datos, la configuración y los resultados:
@@ -119,7 +170,7 @@ python src/preprocessing/extract_spans.py
 python src/preprocessing/apply_category_mapping.py
 
 # 2. Análisis y Partición
-python src/evaluation/validate_dataset.py
+python src/preprocessing/validate_dataset.py
 python src/preprocessing/split_dataset.py
 
 # 3. Modelado (Entrenamiento)
