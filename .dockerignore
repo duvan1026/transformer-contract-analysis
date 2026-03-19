@@ -1,0 +1,29 @@
+# Entornos virtuales locales
+.venv/
+venv/
+env/
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Carpetas de VS Code o IDEs
+.vscode/
+.idea/
+
+# Datos y modelos locales (para que la imagen no pese GBs)
+# Los mapearemos luego con volúmenes para que se guarden en tu PC real
+data/models/*
+data/processed/splits/*
+docs/reports/*
+logs/
+
+# Control de versiones
+.git/
+.gitignore
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
