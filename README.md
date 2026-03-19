@@ -180,3 +180,58 @@ python src/training/train_bert.py
 python src/evaluation/evaluate_test.py
 ```
 
+## 7. Reproducibilidad Total con Docker (Método Recomendado)
+
+Al entrenar el modelo en distintos equipos durante la investigación de este TFM, noté ligeras variaciones en el Accuracy general (alrededor del 1.33%). Al investigar, concluí que esto se debe a diferencias en la arquitectura física del hardware y la gestión de hilos del sistema operativo.
+
+Para solucionar esto, salir de dudas y garantizar un ambiente 100% estándar e independiente de la máquina, decidí dockerizar la solución completa.
+
+Al usar este método, el código corre bajo un sistema Linux aislado y controlado, pero guarda los archivos pesados (modelos) y los resultados (CSVs, imágenes) directamente en tu computador usando volúmenes.
+
+### Requisitos Previos para este método
+Antes de comenzar, asegúrate de cumplir con lo siguiente en tu equipo:
+1. **Instalar Docker Desktop:** Si no lo tienes, descárgalo e instálalo desde [su página oficial](https://www.docker.com/products/docker-desktop/).
+2. **Motor en ejecución:** Asegúrate de abrir la aplicación Docker Desktop y esperar a que indique que el motor está corriendo (*Engine running*) antes de ejecutar cualquier comando en la terminal.
+3. **WSL2 (Solo Windows):** Durante la instalación en Windows, asegúrate de marcar la opción para usar WSL2 en lugar de Hyper-V, ya que ofrece un rendimiento muy superior para Machine Learning.
+
+### Paso 0: Asignar recursos a Docker (Solo para Windows/WSL2)
+
+El entrenamiento del modelo BERT exige un alto consumo de memoria RAM y CPU. Si usas Windows, Docker limita estos recursos por defecto, lo que puede causar un error de falta de memoria (OOM). Para solucionarlo, debes indicarle a Windows que le dé más potencia a la máquina virtual:
+
+1. Abre el Explorador de archivos y ve a tu carpeta de usuario (escribe `%USERPROFILE%` en la barra de direcciones).
+2. Crea (o edita) un archivo llamado `.wslconfig`.
+3. Pega el siguiente contenido (ajusta los valores según la capacidad total de tu equipo):
+
+```
+ini
+[wsl2]
+memory=12GB 
+processors=6
+swap=8GB
+```
+
+4. Abre PowerShell y ejecuta wsl --shutdown para aplicar los cambios. Luego vuelve a abrir Docker Desktop.
+
+### Paso 1: Construir la imagen
+
+Abre tu terminal en la raíz de este proyecto y empaqueta el entorno:
+
+```
+docker build -t pipeline-tfm .
+```
+
+### Paso 2: Ejecutar el pipeline completo
+
+Lanza el contenedor mapeando las carpetas de datos, modelos y reportes con tu equipo local:
+
+En PowerShell (Windows):
+
+```
+docker run --rm -v "${PWD}/data:/app/data" -v "${PWD}/models:/app/models" -v "${PWD}/docs/reports:/app/docs/reports" pipeline-tfm
+```
+
+En Bash (Linux/Mac):
+
+```
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm
+```
