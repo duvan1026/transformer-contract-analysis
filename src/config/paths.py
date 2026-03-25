@@ -28,6 +28,9 @@ SRC_DIR  = BASE_DIR / "src"
 # GESTIÓN DE DATOS (data/)
 # ==============================
 
+META_DATA_DIR = DATA_DIR / "metadata"
+MASTER_DOCUMENT_REGISTRY = META_DATA_DIR / "master_document_registry.csv"
+
 RAW_DATA_DIR = DATA_DIR / "raw"
 CUAD_JSON = RAW_DATA_DIR / "CUAD_v1.json"
 CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
