@@ -1,6 +1,13 @@
 #!/bin/bash
 # Este script se ejecuta por dentro del contenedor Docker
 
+echo "0. Limpiando salidas de ejecuciones anteriores..."
+# Borrar contenido de modelos y reportes, pero mantener las carpetas vacías
+rm -rf data/processed/*
+rm -rf models/bert_baseline/*
+rm -rf models/bert_final/*
+rm -rf docs/reports/*
+
 echo "1. Ejecutando preprocesamiento..."
 python src/preprocessing/extract_spans.py
 python src/preprocessing/apply_category_mapping.py
