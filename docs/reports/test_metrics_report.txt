@@ -1,22 +1,22 @@
-REPORTE DE EVALUACI”N FINAL - AN¡LISIS CONTRACTUAL BERT
+REPORTE DE EVALUACI√ìN FINAL - AN√ÅLISIS CONTRACTUAL BERT
 ============================================================
-Accuracy General: 0.9467
+Accuracy General: 0.9600
 
                              precision    recall  f1-score   support
 
-               audit rights       0.93      1.00      0.97        56
-              governing law       1.00      1.00      1.00        17
-    limitation of liability       1.00      0.91      0.95        43
-                non-compete       0.90      0.90      0.90        21
-termination for convenience       0.85      0.85      0.85        13
+               audit rights       0.95      0.98      0.96        56
+              governing law       0.94      1.00      0.97        17
+    limitation of liability       0.98      0.98      0.98        43
+                non-compete       1.00      0.86      0.92        21
+termination for convenience       0.92      0.92      0.92        13
 
-                   accuracy                           0.95       150
-                  macro avg       0.94      0.93      0.93       150
-               weighted avg       0.95      0.95      0.95       150
+                   accuracy                           0.96       150
+                  macro avg       0.96      0.95      0.95       150
+               weighted avg       0.96      0.96      0.96       150
 
 ============================================================
-GLOSARIO DE M…TRICAS:
-- PRECISION: øQuÈ tan confiable es el modelo cuando detecta una cl·usula? (Evita falsas alarmas).
-- RECALL: øQuÈ porcentaje de las cl·usulas reales logramos capturar? (Evita omisiones legales).
-- F1-SCORE: El balance ideal entre precisiÛn y captura (MÈtrica clave de Èxito).
-- SUPPORT: N˙mero total de muestras de esa categorÌa en el set de prueba.
+GLOSARIO DE M√âTRICAS:
+- PRECISION: ¬øQu√© tan confiable es el modelo cuando detecta una cl√°usula? (Evita falsas alarmas).
+- RECALL: ¬øQu√© porcentaje de las cl√°usulas reales logramos capturar? (Evita omisiones legales).
+- F1-SCORE: El balance ideal entre precisi√≥n y captura (M√©trica clave de √©xito).
+- SUPPORT: N√∫mero total de muestras de esa categor√≠a en el set de prueba.
