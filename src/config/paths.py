@@ -39,6 +39,9 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 DATASET_SPANS_CSV = PROCESSED_DATA_DIR / "dataset_spans.csv"
 DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
 
+INFERENCE_DIR = PROCESSED_DATA_DIR / "inference"
+FRAGMENTS_DATASET = INFERENCE_DIR / "batch_fragments.csv"
+
 SPLITS_DIR = PROCESSED_DATA_DIR / "splits"
 TRAIN_DATASET = SPLITS_DIR / "train.csv"
 VAL_DATASET = SPLITS_DIR / "validation.csv"
