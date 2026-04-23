@@ -20,7 +20,16 @@ from src.config.paths import (
     RAW_DATA_DIR, 
     INFERENCE_DIR, 
     FRAGMENTS_DATASET,
-    MASTER_DOCUMENT_REGISTRY 
+    REJECTED_AUDIT_DATASET,
+    MASTER_DOCUMENT_REGISTRY
+)
+
+from src.config.text_standards import (
+    RANDOM_SEED,
+    MODEL_NAME,
+    DOC_STATES,
+    BATCH_SIZE_DOCS,
+    EXPERIMENT_NAME
 )
 
 # Importar el motor de fragmentación
@@ -33,9 +42,8 @@ def main():
     INFERENCE_DIR.mkdir(parents=True, exist_ok=True)
 
     # 2. Cargar el Tokenizador
-    model_checkpoint = "bert-base-uncased" 
-    print(f"Cargando tokenizador: {model_checkpoint}")
-    tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+    print(f"Cargando tokenizador: {MODEL_NAME}")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
     # 3. Seleccionar y Reservar los documentos a procesar
     registry_path = MASTER_DOCUMENT_REGISTRY
@@ -44,25 +52,25 @@ def main():
         df_registry = pd.read_csv(registry_path)
         
         mask_disponibles = (
-            (df_registry['estado'] == 'Disponible') & 
-            (df_registry['experimento'] == 'Ninguno') & 
-            (df_registry['split_asignado'] == 'Ninguno')
+            (df_registry['estado'] == DOC_STATES["AVAILABLE"]) & 
+            (df_registry['experimento'] == DOC_STATES["NONE"]) & 
+            (df_registry['split_asignado'] == DOC_STATES["NONE"])
         )
         
         df_disponibles = df_registry[mask_disponibles]
-        num_docs_a_tomar = min(100, len(df_disponibles))
+        num_docs_a_tomar = min(BATCH_SIZE_DOCS, len(df_disponibles))
         
         if num_docs_a_tomar == 0:
             print("No hay documentos con estado 'Disponible' en el registro.")
             return
             
-        df_batch = df_disponibles.sample(n=num_docs_a_tomar, random_state=42)
+        df_batch = df_disponibles.sample(n=num_docs_a_tomar, random_state=RANDOM_SEED)
         document_ids = df_batch['id_documento'].tolist()
         
         print(f"Se seleccionaron {len(document_ids)} documentos. Reservándolos...")
         
         # --- CAMBIO CLAVE 1: Estado intermedio "En_proceso" ---
-        df_registry.loc[df_batch.index, 'estado'] = 'En_proceso'
+        df_registry.loc[df_batch.index, 'estado'] = DOC_STATES["IN_PROGRESS"]
         df_registry.to_csv(registry_path, index=False, encoding="utf-8")
         
     except FileNotFoundError:
@@ -71,6 +79,7 @@ def main():
     
     # 4. Procesamiento en lote (Batch Processing)
     all_fragments = []
+    all_rejected = []
     processed_ids = [] # Lista para rastrear los que SÍ fueron exitosos
     
     cuad_json_path = RAW_DATA_DIR / "CUAD_v1.json"
@@ -91,36 +100,38 @@ def main():
             raw_text = cuad_dict[doc_id]["paragraphs"][0]["context"]
             
             # Ejecutamos el motor de fragmentación (que ahora es recursivo)
-            doc_fragments = fragment_single_document(
+            valid_docs, rejected_docs = fragment_single_document(
                 document_id=doc_id, 
                 raw_text=raw_text, 
-                tokenizer=tokenizer, 
-                max_tokens=512
+                tokenizer=tokenizer
             )
             
-            all_fragments.extend(doc_fragments)
+            all_fragments.extend(valid_docs)
+            all_rejected.extend(rejected_docs)
             
             # Anotamos como exitoso solo si la fragmentación no falló
             processed_ids.append(doc_id)
         else:
             print(f"  - Documento {doc_id} no encontrado en CUAD_v1.json. Revirtiendo estado.")
             # Si no se encontró, lo devolvemos a Disponible inmediatamente en memoria
-            df_registry.loc[df_registry['id_documento'] == doc_id, 'estado'] = 'Disponible'
+            df_registry.loc[df_registry['id_documento'] == doc_id, 'estado'] = DOC_STATES["AVAILABLE"]
 
     # 5. Guardar los resultados y hacer el Commit Final en el Registro Maestro
     if all_fragments:
         df_fragments = pd.DataFrame(all_fragments)
+        df_rejected = pd.DataFrame(all_rejected)
         
         try:
-            # Primero guardamos los fragmentos físicos
+            # Guardamos los fragmentos físicos
             df_fragments.to_csv(FRAGMENTS_DATASET, index=False, encoding="utf-8")
-            print(f"\n¡Archivo de fragmentos guardado en: {FRAGMENTS_DATASET}")
+
+            # Auditoria fragmentos no validos
+            df_rejected.to_csv(REJECTED_AUDIT_DATASET, index=False, encoding="utf-8")
             
-            # --- CAMBIO CLAVE 3: El "Commit" ---
             # Solo si se guardó el CSV correctamente, marcamos los procesados como 'Utilizado'
             mask_processed = df_registry['id_documento'].isin(processed_ids)
-            df_registry.loc[mask_processed, 'estado'] = 'Utilizado'
-            df_registry.loc[mask_processed, 'experimento'] = 'v2_inferencia_100_docs'
+            df_registry.loc[mask_processed, 'estado'] = DOC_STATES["PROCESSED"]
+            df_registry.loc[mask_processed, 'experimento'] = EXPERIMENT_NAME
             
             # Guardamos el estado definitivo en el CSV Maestro
             df_registry.to_csv(registry_path, index=False, encoding="utf-8")

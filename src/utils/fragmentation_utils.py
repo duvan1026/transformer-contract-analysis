@@ -1,64 +1,104 @@
 import re
+from src.utils.quality_filters import FragmentQualityFilter
 
-def fragment_single_document(document_id, raw_text, tokenizer, max_tokens=512):
+from src.config.text_standards import (
+    PARAGRAPH_DELIMITER,
+    SENTENCE_BOUNDARY_REGEX,
+    MAX_TOKENS
+)
+
+def fragment_single_document(document_id, raw_text, tokenizer, max_tokens=MAX_TOKENS):
     """
     Estrategia Relacional Determinista:
     - id_documento: Nombre del contrato.
     - parrafo_id: ID numérico del párrafo original (para trazabilidad de hijos).
     - fragmento_id: ID numérico secuencial de todos los trozos del documento.
     """
-    final_fragments = []
+    # final_fragments = []
+    valid_fragments = []
+    rejected_fragments = []
+
     f_idx = 0  # Contador global de fragmentos para este documento
     p_idx = 0  # Contador de párrafos originales
     
     # 1. Separación primaria: Buscar bloques de texto separados por líneas en blanco (\n\n)
     # Esta expresión regular atrapa párrafos completos respetando sus offsets
-    for match in re.finditer(r'([^\n]+(?:\n[^\n]+)*)', raw_text):
+    for match in re.finditer(PARAGRAPH_DELIMITER, raw_text):
         para_text = match.group(1).strip()
         if not para_text:
             continue
             
-        p_idx += 1  # Nuevo párrafo encontrado
         para_start = match.start(1)
+        para_end = match.end(1)
         
         # Medimos el párrafo con el tokenizador
         tokens = tokenizer.encode(para_text, add_special_tokens=False)
         
-        # 2. Si el párrafo cabe perfectamente, es un fragmento válido
+        # --- CASO A: El párrafo cabe entero ---
         if len(tokens) <= max_tokens:
-            f_idx += 1
-            final_fragments.append({
-                "id_documento": document_id,
-                "parrafo_id": p_idx,
-                "fragmento_id": f_idx,
-                "start_offset": para_start,
-                "end_offset": para_start + len(para_text),
-                "contenido": para_text,
-                "tokens_estimados": len(tokens)
-            })
-        else:
-            # 3. Caso: Párrafo gigante que requiere subdivisión determinista
-            # Esta función ahora devuelve una lista de tuplas (texto, start, end)
-            sub_chunks = _split_long_paragraph_deterministically(
-                text=para_text, 
-                start_offset=para_start, 
-                tokenizer=tokenizer, 
-                max_tokens=max_tokens
-            )
-
-            for sub_text, s_start, s_end in sub_chunks:
+            is_valido, motivo = FragmentQualityFilter.validate(para_text)
+            
+            if is_valido:
+                p_idx += 1 # Solo aumenta si el párrafo es útil
                 f_idx += 1
-                final_fragments.append({
+                valid_fragments.append({
                     "id_documento": document_id,
-                    "parrafo_id": p_idx,  # Todos los hijos comparten el mismo ID de su padre
+                    "parrafo_id": p_idx,
                     "fragmento_id": f_idx,
-                    "start_offset": s_start,
-                    "end_offset": s_end,
-                    "contenido": sub_text,
-                    "tokens_estimados": len(tokenizer.encode(sub_text, add_special_tokens=False))
+                    "start_offset": para_start,
+                    "end_offset": para_end,
+                    "contenido": para_text,
+                    "tokens_estimados": len(tokens)
                 })
+            else:
+                # Se va a la auditoría, NO aumenta contadores
+                rejected_fragments.append({
+                    "id_documento": document_id,
+                    "start_offset": para_start,
+                    "end_offset": para_end,
+                    "contenido": para_text,
+                    "motivo_descarte": motivo
+                })
+        
+        # --- CASO B: Párrafo gigante (Subdivisión) ---
+        else:
+            sub_chunks = _split_long_paragraph_deterministically(
+                para_text, para_start, tokenizer, max_tokens
+            )
+            
+            # Filtramos los sub-chunks antes de asignarles IDs
+            valid_subs = []
+            for s_text, s_start, s_end in sub_chunks:
+                is_valido, motivo = FragmentQualityFilter.validate(s_text)
+                if is_valido:
+                    valid_subs.append((s_text, s_start, s_end))
+                else:
+                    rejected_fragments.append({
+                        "id_documento": document_id,
+                        "start_offset": s_start,
+                        "end_offset": s_end,
+                        "contenido": s_text,
+                        "motivo_descarte": motivo
+                    })
+            
+            # Si después de filtrar quedaron hijos válidos, los guardamos bajo un mismo p_idx
+            if valid_subs:
+                p_idx += 1
+                for s_text, s_start, s_end in valid_subs:
+                    f_idx += 1
+                    t_count = len(tokenizer.encode(s_text, add_special_tokens=False))
+                    valid_fragments.append({
+                        "id_documento": document_id,
+                        "parrafo_id": p_idx,
+                        "fragmento_id": f_idx,
+                        "start_offset": s_start,
+                        "end_offset": s_end,
+                        "contenido": s_text,
+                        "tokens_estimados": t_count
+                    })
     
-    return final_fragments
+    # Devolvemos la tupla de dos listas
+    return valid_fragments, rejected_fragments
 
 def _split_long_paragraph_deterministically(text, start_offset, tokenizer, max_tokens):
     """
@@ -70,7 +110,7 @@ def _split_long_paragraph_deterministically(text, start_offset, tokenizer, max_t
     current_start = -1
     
     # Dividir por oraciones (buscando puntos, signos o saltos de línea)
-    for match in re.finditer(r'[^.!?\n]+[.!?\n]*', text):
+    for match in re.finditer(SENTENCE_BOUNDARY_REGEX, text):
         sentence_text = match.group(0)
         sentence_abs_start = start_offset + match.start()
         
