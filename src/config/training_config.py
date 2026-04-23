@@ -12,5 +12,6 @@ TRAIN_RATIO = 0.70
 VAL_RATIO = 0.15
 TEST_RATIO = 0.15
 
-# semilla para reproducibilidad
+# --- REPRODUCIBILIDAD ---
+# Semilla global para asegurar que la fragmentación y el muestreo sean deterministas
 RANDOM_SEED = 42
