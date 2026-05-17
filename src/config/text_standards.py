@@ -51,5 +51,10 @@ DOC_STATES = {
 # Umbral de descarte (NONE implícito)
 CONFIDENCE_THRESHOLD = 0.75
 
+# Cantidad de fragmentos de texto que BERT procesará en paralelo por cada iteración.
+# Un valor de 16 optimiza el uso de la GPU (VRAM) sin riesgo de saturar la memoria (Out of Memory).
+BATCH_SIZE_INFERENCE = 16
+
 # Cuántos candidatos buscar por contrato (Recall@K)
 TOP_K_CANDIDATES = 3
+
