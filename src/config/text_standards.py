@@ -28,6 +28,8 @@ SENTENCE_BOUNDARY_REGEX = r'[^.!?\n]+[.!?\n]*'
 # Caracteres a ignorar al verificar si un texto es solo numérico
 NUMERIC_CLEAN_REGEX = r'[.,\s\-\/]'
 
+########### Warning ###################
+# To Do: MODEL_NAME = "bert-base-uncased" tanto aquí como en label_mapping.py. No es un error grave, pero te sugiero borrarlo de uno de los dos lados para mantener la "Única Fuente de Verdad" (recomiendo dejarlo en label_mapping.py o cambiarle el nombre aquí a TOKENIZER_CHECKPOINT si lo quieres separar).
 # Configuración del modelo base
 MODEL_NAME = "bert-base-uncased"
 
@@ -37,8 +39,17 @@ EXPERIMENT_NAME = "v2_inferencia_100_docs"
 
 # --- FLUJO DE DOCUMENTOS (Registro Maestro) ---
 DOC_STATES = {
-    "AVAILABLE": "Disponible",
-    "IN_PROGRESS": "En_proceso",
-    "PROCESSED": "Utilizado",
+    "AVAILABLE": "Disponible",      # Contrato crudo listo para ser tomado
+    "IN_PROGRESS": "En_proceso",    # Siendo fragmentado por el script 01
+    "PROCESSED": "Utilizado",       # Fragmentado con éxito, listo para BERT
+    "SCORED": "Clasificado",        # Fase 2 completada (BERT ya calculó scores)
     "NONE": "Ninguno"
 }
+
+# --- CONFIGURACIÓN DE INFERENCIA Y EVALUACIÓN (Fase 2) ---
+
+# Umbral de descarte (NONE implícito)
+CONFIDENCE_THRESHOLD = 0.75
+
+# Cuántos candidatos buscar por contrato (Recall@K)
+TOP_K_CANDIDATES = 3

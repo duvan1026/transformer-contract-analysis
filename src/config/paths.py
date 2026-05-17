@@ -43,6 +43,8 @@ INFERENCE_DIR = PROCESSED_DATA_DIR / "inference"
 FRAGMENTS_DATASET = INFERENCE_DIR / "batch_fragments.csv"
 REJECTED_AUDIT_DATASET = INFERENCE_DIR / "rejected_fragments_audit.csv"
 
+INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
+
 SPLITS_DIR = PROCESSED_DATA_DIR / "splits"
 TRAIN_DATASET = SPLITS_DIR / "train.csv"
 VAL_DATASET = SPLITS_DIR / "validation.csv"
