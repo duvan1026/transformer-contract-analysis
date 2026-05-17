@@ -33,7 +33,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**verificar:** ue estoy en la ruta d epyhton con la version correcta. sabiendo que: 
+**Nota de verificación:** Para confirmar que estás utilizando la versión correcta en tu entorno, ejecuta `python --version` en tu terminal.
 
 ### B. Archivo de Dependencias (requirements.txt)
 
@@ -74,7 +74,7 @@ project/
 │   ├── preprocessing/      # Scripts de preparación de datos
 │   ├── training/           # Lógica de entrenamiento y definición del Dataset PyTorch
 │   └── evaluation/         # Scripts de validación e inferencia de test
-│   └── inference/          # Pipeline de producción (fragmentación y scoring)
+│   └── inference/          # Pipeline de producción (Fragmentación y Scoring con IA)
 │
 └── README.md
 
@@ -163,7 +163,22 @@ Se ha desarrollado un pipeline que genera informes detallados en docs/reports/:
 
 ---
 
-## 6. Flujo de Ejecución Recomendado
+## 6. Fase de Inferencia en Producción (Framework)
+
+Este proyecto no solo entrena un modelo, sino que funciona como un framework listo para clasificar nuevos contratos masivamente. Se ha implementado un sistema de trazabilidad basado en un Registro Maestro (`master_document_registry.csv`) que controla el ciclo de vida de cada documento (`Disponible` -> `Utilizado` -> `Clasificado`).
+
+* **Paso 0: Inicialización del Inventario (`src/data/00_init_master_registry.py`)**
+  Rastrea todos los contratos disponibles y los splits de entrenamiento previos para establecer el estado inicial del sistema.
+
+* **Paso 1: Preparación de Lotes (`src/inference/01_prepare_batch_documents.py`)**
+  Toma los contratos en estado `Disponible`, los divide en párrafos y fragmentos (respetando la longitud máxima de tokens de BERT) y genera un archivo de carga para la GPU (`batch_fragments.csv`), cambiando el estado de los documentos a `Utilizado`.
+
+* **Paso 2: Clasificación y Reglas de Negocio (`src/inference/02_run_inference.py`)**
+  Orquesta el modelo BERT para analizar masivamente los fragmentos. Aplica un umbral de confianza estricto (ej. 75%). Si la IA no supera este umbral, el fragmento se envía a una categoría `NONE` para revisión manual. Al finalizar, guarda el dataset enriquecido (`inference_scored_results.csv`) y marca los contratos como `Clasificado`.
+
+---
+
+## 7. Flujo de Ejecución Recomendado
 
 ```
 # 1. Ingeniería de Datos
@@ -179,9 +194,16 @@ python src/training/train_bert.py
 
 # 4. Evaluación y Auditoría Final
 python src/evaluation/evaluate_test.py
+
+# 5. Gestión de Inventario y Estado (Gateway a Producción)
+python src/data/00_init_master_registry.py
+
+# 6. Pipeline de Inferencia (Clasificación en Producción)
+python src/inference/01_prepare_batch_documents.py
+python src/inference/02_run_inference.py
 ```
 
-## 7. Reproducibilidad Total con Docker (Método Recomendado)
+## 8. Reproducibilidad Total con Docker (Método Recomendado)
 
 Al entrenar el modelo en distintos equipos durante la investigación de este TFM, noté ligeras variaciones en el Accuracy general (alrededor del 1.33%). Al investigar, concluí que esto se debe a diferencias en la arquitectura física del hardware y la gestión de hilos del sistema operativo.
 
