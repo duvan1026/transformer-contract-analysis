@@ -74,6 +74,7 @@ project/
 │   ├── preprocessing/      # Scripts de preparación de datos
 │   ├── training/           # Lógica de entrenamiento y definición del Dataset PyTorch
 │   └── evaluation/         # Scripts de validación e inferencia de test
+│   └── inference/          # Pipeline de producción (fragmentación y scoring)
 │
 └── README.md
 
