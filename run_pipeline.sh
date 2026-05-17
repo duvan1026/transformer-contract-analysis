@@ -20,4 +20,7 @@ python src/training/train_bert.py
 echo "3. Evaluando el modelo y generando reportes..."
 python src/evaluation/evaluate_test.py
 
+echo "4. Inicializando Registro Maestro para producción..."
+python src/data/00_init_master_registry.py
+
 echo "¡Pipeline finalizado con éxito!"
