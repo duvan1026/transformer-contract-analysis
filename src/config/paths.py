@@ -49,6 +49,10 @@ VAL_DATASET = SPLITS_DIR / "validation.csv"
 TEST_DATASET = SPLITS_DIR / "test.csv"
 SPLIT_REPORT_FILE = SPLITS_DIR / "split_report.txt"
 
+# Rutas para los resultados de inferencia (Fase 2)
+INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
+INFERENCE_METRICS_REPORT = INFERENCE_DIR / "inference_metrics_report.txt"
+JSON_OUTPUTS_DIR = INFERENCE_DIR / "extracted_contracts"
 
 # ==============================
 # MODELOS Y ENTRENAMIENTO (models/)
