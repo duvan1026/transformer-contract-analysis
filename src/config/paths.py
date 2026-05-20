@@ -55,6 +55,7 @@ SPLIT_REPORT_FILE = SPLITS_DIR / "split_report.txt"
 INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
 INFERENCE_METRICS_REPORT = INFERENCE_DIR / "inference_metrics_report.txt"
 JSON_OUTPUTS_DIR = INFERENCE_DIR / "extracted_contracts"
+INFERENCE_CONFUSION_MATRIX_IMAGE = INFERENCE_DIR / "matriz_confusion_fragmentos.png"
 
 # ==============================
 # MODELOS Y ENTRENAMIENTO (models/)

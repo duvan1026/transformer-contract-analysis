@@ -58,3 +58,7 @@ BATCH_SIZE_INFERENCE = 16
 # Cuántos candidatos buscar por contrato (Recall@K)
 TOP_K_CANDIDATES = 3
 
+# Reglas para la Evaluación del Modelo
+OVERLAP_THRESHOLD_CHARS = 30  # Mínimo de caracteres solapados para considerar un "Verdadero Positivo"
+RECALL_TOP_K_VALUES = [1, 3]  # Valores de K para medir el Recall a nivel contrato (Top 1 y Top 3)
+
