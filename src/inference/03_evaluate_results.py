@@ -27,15 +27,15 @@ from src.config.paths import (
     INFERENCE_CONFUSION_MATRIX_IMAGE
 )
 
+# Importación de estándares técnicos y flujos
+from src.config.text_standards import (
+    OVERLAP_THRESHOLD_CHARS,
+    CONFIDENCE_THRESHOLDS
+)
+
 # Importar estándares y parámetros configurables
-from src.config.text_standards import OVERLAP_THRESHOLD_CHARS
 from src.config.label_mapping import ID2LABEL
 
-# ==============================================================================
-# CONFIGURACIÓN DE EXPERIMENTOS (Modifica esta lista para tu TFM)
-# ==============================================================================
-UMBRALES_A_EVALUAR = [0.50, 0.70, 0.75, 0.85, 0.90]
-# ==============================================================================
 
 def _load_category_mapping() -> dict:
     if not CATEGORY_MAPPING_FILE.exists():
@@ -200,9 +200,9 @@ def main():
     report_C = generate_mapping_summary()
     
     # 2. Bucle de Simulación de Umbrales
-    print(f"[*] Iniciando simulación para los umbrales: {UMBRALES_A_EVALUAR}")
+    print(f"[*] Iniciando simulación para los umbrales: {CONFIDENCE_THRESHOLDS}")
     
-    for umbral in UMBRALES_A_EVALUAR:
+    for umbral in CONFIDENCE_THRESHOLDS:
         print(f"\n--- Procesando Umbral {umbral} ---")
         
         # A. Asignar clases dinámicamente según el umbral actual
