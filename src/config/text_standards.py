@@ -52,7 +52,7 @@ DOC_STATES = {
 CONFIDENCE_THRESHOLD = 0.75
 
 # Lista de umbrales de confianza a evaluar en la Fase 3 de forma secuencial.
-CONFIDENCE_THRESHOLDS = [0.70, 0.75, 0.80, 0.85, 0.90]
+CONFIDENCE_THRESHOLDS = [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
 
 # Cantidad de fragmentos de texto que BERT procesará en paralelo por cada iteración.
 # Un valor de 16 optimiza el uso de la GPU (VRAM) sin riesgo de saturar la memoria (Out of Memory).
