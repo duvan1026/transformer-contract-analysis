@@ -224,3 +224,7 @@ models/bert_final/
 *.bin
 *.safetensors
 *.pt
+
+# Ignorar salidas generadas en la evaluación (JSONs y ZIPs)
+data/processed/inference/*/json_outputs/
+data/processed/*.zip

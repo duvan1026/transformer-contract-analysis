@@ -12,6 +12,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datetime
 from pathlib import Path
 from sklearn.metrics import classification_report, confusion_matrix
 
@@ -24,7 +25,8 @@ from src.config.paths import (
     INFERENCE_METRICS_REPORT,
     CUAD_JSON,
     CATEGORY_MAPPING_FILE,
-    INFERENCE_CONFUSION_MATRIX_IMAGE
+    INFERENCE_CONFUSION_MATRIX_IMAGE,
+    INFERENCE_JSON_DIR_NAME
 )
 
 # Importación de estándares técnicos y flujos
@@ -35,6 +37,72 @@ from src.config.text_standards import (
 
 # Importar estándares y parámetros configurables
 from src.config.label_mapping import ID2LABEL
+
+def generate_contract_jsons(df: pd.DataFrame, umbral: float, carpeta_experimento: Path):
+    """
+    Toma los resultados simulados para un umbral y exporta la estructura
+    JSON de las cláusulas extraídas para cada documento.
+    """
+    # Usamos .name para tomar solo "json_outputs" y meterlo en la subcarpeta del umbral
+    json_dir = carpeta_experimento / INFERENCE_JSON_DIR_NAME.name
+    json_dir.mkdir(parents=True, exist_ok=True)
+    
+    valid_classes = [label.lower().strip() for label in ID2LABEL.values()]
+    processing_date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    
+    # Identificar columna de texto
+    texto_col = 'contenido' if 'contenido' in df.columns else 'text'
+    
+    contratos = df.groupby("id_documento")
+    jsons_creados = 0
+    
+    for id_doc, doc_df in contratos:
+        doc_data = {
+            "document_id": str(id_doc),
+            "processing_date": processing_date,
+            "applied_threshold": float(umbral),
+            "extracted_clauses": {cls: [] for cls in valid_classes}
+        }
+        
+        # Filtrar los que superaron el umbral
+        valid_frags = doc_df[doc_df["pred_simulada"] != "NONE"]
+        
+        for cls in valid_classes:
+            frags_cls = valid_frags[valid_frags["pred_simulada"] == cls]
+            if frags_cls.empty:
+                continue
+            
+            var_under = f"score_{cls.replace(' ', '_').replace('-', '_')}"
+            var_hyph = f"score_{cls.replace(' ', '_')}"
+            col_score = var_hyph if var_hyph in df.columns else var_under
+            
+            # Ordenar por mayor probabilidad
+            if col_score in frags_cls.columns:
+                frags_cls = frags_cls.sort_values(by=col_score, ascending=False)
+            
+            # Llenar la lista de la categoría
+            for _, row in frags_cls.iterrows():
+                score_val = float(row[col_score]) if col_score in row else 0.0
+                start_off = row.get("start_offset")
+                end_off = row.get("end_offset")
+                
+                doc_data["extracted_clauses"][cls].append({
+                    "score": round(score_val, 4),
+                    "text_snippet": str(row.get(texto_col, "")),
+                    "start_offset": int(start_off) if pd.notna(start_off) else None,
+                    "end_offset": int(end_off) if pd.notna(end_off) else None
+                })
+                
+        # Guardar archivo JSON
+        safe_doc_id = str(id_doc).replace('.txt', '').replace('/', '_')
+        out_file = json_dir / f"{safe_doc_id}.json"
+        
+        with open(out_file, "w", encoding="utf-8") as f:
+            json.dump(doc_data, f, indent=4, ensure_ascii=False)
+            
+        jsons_creados += 1
+        
+    print(f"  [+] Generados {jsons_creados} archivos JSON estructurados en: {json_dir.name}/")
 
 
 def _load_category_mapping() -> dict:
@@ -228,6 +296,8 @@ def main():
             
         save_confusion_matrix_image(df_sim, ruta_imagen, umbral)
         print(f"  [+] Guardado en: {carpeta_experimento.name}/")
+
+        generate_contract_jsons(df_sim, umbral, carpeta_experimento)
 
     print("\n[*] FASE 3 Y SIMULACIÓN COMPLETADAS CON ÉXITO.")
 

@@ -56,6 +56,7 @@ INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
 INFERENCE_METRICS_REPORT = INFERENCE_DIR / "inference_metrics_report.txt"
 JSON_OUTPUTS_DIR = INFERENCE_DIR / "extracted_contracts"
 INFERENCE_CONFUSION_MATRIX_IMAGE = INFERENCE_DIR / "matriz_confusion_fragmentos.png"
+INFERENCE_JSON_DIR_NAME = INFERENCE_DIR / "json_outputs"
 
 # ==============================
 # MODELOS Y ENTRENAMIENTO (models/)
