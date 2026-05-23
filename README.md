@@ -176,6 +176,37 @@ Este proyecto no solo entrena un modelo, sino que funciona como un framework lis
 * **Paso 2: Clasificación y Reglas de Negocio (`src/inference/02_run_inference.py`)**
   Orquesta el modelo BERT para analizar masivamente los fragmentos. Aplica un umbral de confianza estricto (ej. 75%). Si la IA no supera este umbral, el fragmento se envía a una categoría `NONE` para revisión manual. Al finalizar, guarda el dataset enriquecido (`inference_scored_results.csv`) y marca los contratos como `Clasificado`.
 
+* **Paso 3: Evaluación de Umbrales y Estructuración JSON (`src/inference/03_evaluate_results.py`)**
+  Evalúa el rendimiento del modelo frente a diferentes umbrales de confianza (ej. 0.70 a 0.95) para simular una regla de descarte (`NONE` implícito) que mitigue los Falsos Positivos. Por cada umbral procesado, genera:
+  * Un reporte de métricas detallado (Macro F1, Precision, Recall a nivel fragmento).
+  * Una matriz de confusión en formato imagen.
+  * **Salida Estructurada (JSON):** Exporta cada contrato clasificado en un archivo JSON independiente (`json_outputs/`), agrupando los fragmentos por cláusula legal junto con su score, offsets y el texto plano, listo para ser consumido por un sistema externo.
+
+### 6.1 Formato de Salida Estructurada (JSON)
+El pipeline convierte los párrafos clasificados en representaciones estructuradas por contrato. Ejemplo de salida generada en la carpeta `json_outputs/`:
+
+```json
+{
+    "document_id": "ABILITYINC_SERVICES_AGREEMENT",
+    "processing_date": "2026-05-21T21:32:40Z",
+    "applied_threshold": 0.9,
+    "extracted_clauses": {
+        "audit rights": [],
+        "governing law": [
+            {
+                "score": 0.9845,
+                "text_snippet": "This Agreement is governed by the laws of the State of Delaware...",
+                "start_offset": 24546,
+                "end_offset": 26116
+            }
+        ],
+        "limitation of liability": [],
+        "non-compete": [],
+        "termination for convenience": []
+    }
+}
+```
+
 ---
 
 ## 7. Flujo de Ejecución Recomendado
@@ -201,6 +232,7 @@ python src/data/00_init_master_registry.py
 # 6. Pipeline de Inferencia (Clasificación en Producción)
 python src/inference/01_prepare_batch_documents.py
 python src/inference/02_run_inference.py
+python src/inference/03_evaluate_results.py
 ```
 
 ## 8. Reproducibilidad Total con Docker (Método Recomendado)
@@ -258,3 +290,6 @@ En Bash (Linux/Mac):
 ```
 docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm
 ```
+
+## 9. Próximos Pasos (Roadmap)
+* **Fase 2 (En desarrollo):** Transición de un modelo de 5 clases a 6 clases, incorporando explícitamente la categoría `NONE`. Esto permitirá al modelo aprender semánticamente a descartar texto irrelevante o cláusulas estándar (ej. definiciones) sin depender exclusivamente de filtros por umbral de confianza, mitigando el problema del desbalance de clases y reduciendo drásticamente los Falsos Positivos de alta confianza.
