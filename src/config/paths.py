@@ -38,6 +38,7 @@ CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 DATASET_SPANS_CSV = PROCESSED_DATA_DIR / "dataset_spans.csv"
 DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
+DATASET_WITH_NONE_CSV = PROCESSED_DATA_DIR / "dataset_with_none.csv"
 
 INFERENCE_DIR = PROCESSED_DATA_DIR / "inference"
 FRAGMENTS_DATASET = INFERENCE_DIR / "batch_fragments.csv"
