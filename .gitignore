@@ -228,3 +228,5 @@ models/bert_final/
 # Ignorar salidas generadas en la evaluación (JSONs y ZIPs)
 data/processed/inference/*/json_outputs/
 data/processed/*.zip
+
+docs/architecture/complete_map.txt
