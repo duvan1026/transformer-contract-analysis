@@ -17,6 +17,6 @@ codebase-memory-mcp cli search_graph "{\"project\": \"D-DUVAN-Maestria-TFM-trans
 echo.
 echo ====================================================
 echo ¡Proceso completado con exito!
-echo Archivo actualizado en: docs/architecture/mapa_completo_tfm.txt
+echo Archivo actualizado en: docs/architecture/complete_map.txt
 echo ====================================================
 pause
