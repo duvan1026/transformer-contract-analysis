@@ -38,6 +38,7 @@ CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 DATASET_SPANS_CSV = PROCESSED_DATA_DIR / "dataset_spans.csv"
 DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
+DATASET_NONE_MASTER_CSV = PROCESSED_DATA_DIR / "dataset_none_master.csv"
 DATASET_WITH_NONE_CSV = PROCESSED_DATA_DIR / "dataset_with_none.csv"
 
 INFERENCE_DIR = PROCESSED_DATA_DIR / "inference"
@@ -52,7 +53,7 @@ VAL_DATASET = SPLITS_DIR / "validation.csv"
 TEST_DATASET = SPLITS_DIR / "test.csv"
 SPLIT_REPORT_FILE = SPLITS_DIR / "split_report.txt"
 
-# Rutas para los resultados de inferencia (Fase 2)
+# Rutas para los resultados de inferencia 
 INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
 INFERENCE_METRICS_REPORT = INFERENCE_DIR / "inference_metrics_report.txt"
 JSON_OUTPUTS_DIR = INFERENCE_DIR / "extracted_contracts"

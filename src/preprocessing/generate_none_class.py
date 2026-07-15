@@ -1,10 +1,23 @@
+"""
+generate_none_class.py
+
+Script de extracción y consolidación de la clase NONE (Activo Maestro).
+Procesa el universo completo de contratos válidos (454) aplicando un pipeline
+de "chunking" (fragmentación por párrafos), filtrado por longitud, cálculo de 
+densidad alfabética y exclusión de zonas de colisión espacial.
+
+El resultado se consolida en un Documento Maestro, del cual posteriormente
+se extraerán las muestras para entrenamiento.
+"""
+
 import sys
-from pathlib import Path
+import re
 import json
 import random
 import pandas as pd
 import numpy as np
-import re
+from pathlib import Path
+
 
 # Añadir raíz del proyecto al path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -12,17 +25,20 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 from src.config.paths import (
     CUAD_JSON,
     DATASET_TAXONOMY_CSV,
-    DATASET_WITH_NONE_CSV
+    DATASET_NONE_MASTER_CSV
 )
 
 # Importamos las constantes Estandarizadas
 from src.config.text_standards import (
     RANDOM_SEED,
     MIN_CHARS_THRESHOLD,
-    FILTER_PURE_NUMBERS,
-    NUMERIC_CLEAN_REGEX,
-    SENTENCE_BOUNDARY_REGEX
+    NONE_MIN_CHARS_THRESHOLD,
+    NONE_MIN_ALPHA_DENSITY,
+    PARAGRAPH_DELIMITER,
+    ALPHABETIC_CHARS_REGEX,
 )
+
+from src.utils.text_utils import clean_text
 
 
 def set_seed(seed: int):
@@ -33,36 +49,36 @@ def set_seed(seed: int):
 
 def load_contracts_context(json_path: Path) -> dict:
     """
-    Lee el CUAD.json original y extrae el texto completo (context) de cada contrato.
-    Retorna un diccionario: { 'id_documento': 'texto completo...' }
+    Lee el CUAD.json original y extrae el texto completo de cada contrato.
+    Retorna: Diccionario { 'id_documento': 'texto completo...' }
     """
     contexts = {}
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     for document in data["data"]:
-        for paragraph in document["paragraphs"]:
-            if paragraph.get("qas"):
-                first_qa_id = paragraph["qas"][0]["id"]
-                id_documento = first_qa_id.split("__")[0]
-                contexts[id_documento] = paragraph["context"]
-                break  
-                
+        doc_name = document["title"]
+        # Extraer el texto completo del documento (context)
+        context = document["paragraphs"][0]["context"]
+        contexts[doc_name] = context
+        
     return contexts
 
 
 def build_forbidden_zones(df_taxonomy: pd.DataFrame) -> dict:
     """
-    Procesa el CSV de categorías válidas y genera un mapa de intervalos ocupados por contrato.
-    Retorna: { 'id_documento': [(inicio_1, fin_1), (inicio_2, fin_2)] }
+    Fase 1: Mapeo de Zonas Prohibidas (Seguridad Espacial).
+    Extrae las coordenadas exactas donde existen cláusulas positivas.
+    Retorna: Diccionario { 'id_documento': [(start_offset, end_offset), ...] }
     """
     forbidden_zones = {}
     for _, row in df_taxonomy.iterrows():
         doc_id = row["id_documento"]
+        # El inicio es el offset guardado
         start = int(row["offset"])
-        text_length = len(str(row["span_text"]))
-        end = start + text_length
-
+        # El fin se calcula con la longitud exacta del texto guardado
+        end = start + len(str(row["span_text"]))
+        
         if doc_id not in forbidden_zones:
             forbidden_zones[doc_id] = []
         forbidden_zones[doc_id].append((start, end))
@@ -70,134 +86,117 @@ def build_forbidden_zones(df_taxonomy: pd.DataFrame) -> dict:
     return forbidden_zones
 
 
-def extract_sentences_with_offsets(text: str) -> list:
+def calculate_alpha_density(text: str) -> float:
     """
-    Segmenta un texto utilizando la expresión regular oficial del proyecto,
-    devolviendo los índices exactos (offsets) para garantizar trazabilidad.
+    Fase 4 (Subrutina): Calcula el porcentaje de letras en un texto.
     """
-    sentences = []
+    if not text:
+        return 0.0
+    # Encontrar todas las letras puras
+    alpha_chars = re.findall(ALPHABETIC_CHARS_REGEX, text)
+    return len(alpha_chars) / len(text)
 
-    # re.finditer escanea el texto y aplica regla oficial de corte
-    for match in re.finditer(SENTENCE_BOUNDARY_REGEX, text):
-        s_text = match.group(0) # El texto capturado
-        s_start = match.start() # Índice de inicio
-        s_end = match.end()     # Índice de fin
+
+def process_single_document(doc_id: str, text: str, zones: list) -> list:
+    """
+    Fases 2 a 5: Aplica el embudo de filtrado a un único contrato.
+    Retorna una lista de diccionarios con los fragmentos NONE validados.
+    """
+    valid_chunks = []
+    
+    # Fase 2: Fragmentación Estructural (Chunking) por Párrafos
+    for match in re.finditer(PARAGRAPH_DELIMITER, text):
+        chunk_text = match.group(0)
+        start_offset = match.start()
+        end_offset = match.end()
+
+        # Variable para evalaur texto (Sin espacios)
+        eval_text = clean_text(chunk_text)
         
-        # Limpiar espacios vacíos a los lados sin perder los índices originales
-        if s_text.strip():
-            sentences.append({
-                "text": s_text.strip(),
-                "start": s_start,
-                "end": s_end
-            })
-            
-    return sentences
-
-
-def extract_none_for_document(doc_id: str, text: str, zones: list, n_needed: int) -> list:
-    """
-    Extrae de forma reproducible N oraciones 'none' de un documento específico,
-    aplicando estrictamente las reglas de auditoría de text_standards.py.
-    """
-    sentences = extract_sentences_with_offsets(text)
-    valid_candidates = []
-
-    for sentence in sentences:
-        s_text = sentence["text"]
-        s_start = sentence["start"]
-        s_end = sentence["end"]
-        
-        # Filtro de Calidad por Longitud Mínima Oficial
-        if len(s_text) < MIN_CHARS_THRESHOLD:
+        # Fase 3: Auditoría Física (Filtro de Longitud para evitar atajo)
+        if len(eval_text) < NONE_MIN_CHARS_THRESHOLD:
             continue
-
-        # Filtro de Fragmentos Puramente Numéricos o Ruido
-        if FILTER_PURE_NUMBERS:
-            # Usamos tu regex oficial para remover puntos, guiones, barras y espacios
-            cleaned_text = re.sub(NUMERIC_CLEAN_REGEX, '', s_text)
             
-            # Si después de limpiar el texto, lo que queda son solo dígitos o está vacío,
-            # significa que era una numeración (ej: "1.1.2" -> "112") o puros símbolos.
-            if cleaned_text.isdigit() or cleaned_text == "":
-                continue
-
-        # Verificar colisión matemática contra las zonas ocupadas de ESTE contrato
+        # Fase 4: Auditoría Lógica (Densidad Alfabética)
+        density = calculate_alpha_density(eval_text)
+        if density < NONE_MIN_ALPHA_DENSITY:
+            continue
+            
+        # Fase 5: Auditoría Espacial (Filtro de Colisión)
         collision = False
         for z_start, z_end in zones:
-            if (s_start < z_end) and (s_end > z_start):
+            # Fórmula de intersección matemática: Inicio A < Fin B Y Fin A > Inicio B
+            if (start_offset < z_end) and (end_offset > z_start):
                 collision = True
                 break
-
+                
+        # Si sobrevive a todas las auditorías, es un candidato NONE perfecto
         if not collision:
-            valid_candidates.append({
+            valid_chunks.append({
                 "id_documento": doc_id,
-                "categoria": "none",
-                "span_text": sentence["text"],
-                "offset": s_start
+                "categoria": "NONE",
+                "span_text": chunk_text,
+                "start_offset": start_offset,
+                "end_offset": end_offset,
+                "alphabetic_density": round(density, 4)
             })
-
-    # Muestreo aleatorio local controlado por la semilla
-    if len(valid_candidates) < n_needed:
-        # Si el contrato es muy corto y no hay suficientes oraciones libres, tomamos las que haya
-        return valid_candidates
-    
-    return random.sample(valid_candidates, n_needed)
+            
+    return valid_chunks
 
 
-def run():
-    print("Iniciando generación de clase 'none' con BALANCE LOCAL POR CONTRATO...")
-    
-    # 1. Fijar semilla global para asegurar reproducibilidad exacta
+def main():
+    print(f"\n[INFO] Iniciando pipeline de extracción Master NONE...")
     set_seed(RANDOM_SEED)
 
-    # 2. Cargar dataset de taxonomía homologada
-    df_taxonomy = pd.read_csv(DATASET_TAXONOMY_CSV)
-    
-    # 3. Cargar contextos de contratos y construir mapa de zonas prohibidas
+    # 1. Cargar el texto fuente y las taxonomías positivas
+    print("[INFO] Cargando contextos crudos desde CUAD_v1.json...")
     contexts = load_contracts_context(CUAD_JSON)
+    
+    print(f"[INFO] Cargando archivo de taxonomía: {DATASET_TAXONOMY_CSV.name}...")
+    try:
+        df_taxonomy = pd.read_csv(DATASET_TAXONOMY_CSV)
+    except FileNotFoundError:
+        print(f"[ERROR] No se encontró {DATASET_TAXONOMY_CSV}. Debe generarse primero.")
+        sys.exit(1)
+
+    # 2. Construir zonas prohibidas
+    print("[INFO] Mapeando zonas espaciales prohibidas (cláusulas reales)...")
     forbidden_zones = build_forbidden_zones(df_taxonomy)
-
-    all_sampled_nones = []
     
-    # 4. Agrupar la taxonomía por contrato para calcular el balance local
-    grouped = df_taxonomy.groupby("id_documento")
+    # 3. Procesar el embudo documento por documento
+    all_none_master_records = []
+    doc_ids_to_process = df_taxonomy["id_documento"].unique()
     
-    print(f"Procesando {len(grouped)} contratos únicos para balancear...")
-
-    for doc_id, group in grouped:
-        # Calcular el número máximo de spans que tiene la clase más frecuente EN ESTE CONTRATO
-        conteo_clases_local = group["categoria"].value_counts()
-        n_max_local = conteo_clases_local.max()
-        
-        # Obtener el texto del contrato y sus zonas prohibidas
+    print(f"[INFO] Procesando chunking y filtros para {len(doc_ids_to_process)} documentos...")
+    
+    for doc_id in doc_ids_to_process:
         text = contexts.get(doc_id)
         if not text:
-            print(f"⚠️ Advertencia: No se encontró el texto original para el contrato {doc_id}")
+            print(f"[WARN] No se encontró texto original para {doc_id}. Omitiendo.")
             continue
             
         zones = forbidden_zones.get(doc_id, [])
+        doc_valid_nones = process_single_document(doc_id, text, zones)
+        all_none_master_records.extend(doc_valid_nones)
+
+    # Fase 6: Consolidación en el Master File
+    df_master_none = pd.DataFrame(all_none_master_records)
+    
+    print("\n" + "="*50)
+    print("               RESUMEN DE EXTRACCIÓN NONE")
+    print("="*50)
+    print(f"Total Documentos Procesados: {len(doc_ids_to_process)}")
+    print(f"Total Fragmentos Master NONE Extraídos: {len(df_master_none)}")
+    
+    if not df_master_none.empty:
+        # Asegurar que el directorio de salida exista
+        DATASET_NONE_MASTER_CSV.parent.mkdir(parents=True, exist_ok=True)
         
-        # Extraer exactamente n_max_local muestras para este contrato
-        doc_nones = extract_none_for_document(doc_id, text, zones, n_max_local)
-        all_sampled_nones.extend(doc_nones)
-
-    # 5. Consolidar e integrar datasets
-    df_nones = pd.DataFrame(all_sampled_nones)
-    print(f"Se generaron exitosamente {len(df_nones)} spans para la clase 'none' en total.")
-
-    df_final = pd.concat([df_taxonomy, df_nones], ignore_index=True)
-    
-    # Ordenar por documento y offset para mantener coherencia de lectura
-    df_final = df_final.sort_values(by=["id_documento", "offset"]).reset_index(drop=True)
-
-    # 6. Guardar el nuevo dataset extendido
-    Path(DATASET_WITH_NONE_CSV).parent.mkdir(parents=True, exist_ok=True)
-    df_final.to_csv(DATASET_WITH_NONE_CSV, index=False)
-    
-    print(f"✅ Éxito! Dataset balanceado guardado en: {DATASET_WITH_NONE_CSV}")
-    print("\nDistribución final de clases general:")
-    print(df_final["categoria"].value_counts())
-
+        # Guardar en disco
+        df_master_none.to_csv(DATASET_NONE_MASTER_CSV, index=False, encoding="utf-8")
+        print(f"\n[ÉXITO] Archivo maestro guardado correctamente en: {DATASET_NONE_MASTER_CSV}")
+    else:
+        print("\n[ERROR] No se extrajo ningún fragmento válido. Revise los umbrales.")
 
 if __name__ == "__main__":
-    run()
+    main()
