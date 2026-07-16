@@ -15,3 +15,7 @@ TEST_RATIO = 0.15
 # --- REPRODUCIBILIDAD ---
 # Semilla global para asegurar que la fragmentación y el muestreo sean deterministas
 RANDOM_SEED = 42
+
+# split_dataset_stratified
+# Cuota mínima de documentos por categoría para garantizar representación de clases minoritarias en todos los splits.
+MIN_SAMPLES_PER_CLASS = 10

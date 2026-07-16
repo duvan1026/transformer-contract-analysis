@@ -12,7 +12,7 @@ echo "1. Ejecutando preprocesamiento..."
 python src/preprocessing/extract_spans.py
 python src/preprocessing/apply_category_mapping.py
 python src/preprocessing/validate_dataset.py
-python src/preprocessing/split_dataset.py
+python src/preprocessing/split_dataset_density.py
 
 echo "2. Iniciando entrenamiento de BERT..."
 python src/training/train_bert.py
