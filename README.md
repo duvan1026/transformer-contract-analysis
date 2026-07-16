@@ -132,7 +132,7 @@ Genera estadísticas de distribución para verificar la calidad antes del entren
 
 * **Salida**: docs/dataset_report.txt (Reporte de balances y conteos).
 
-### D. Generación de Splits (split_dataset.py)
+### D. Generación de Splits (split_dataset_density.py)
 
 Divide los datos en entrenamiento, validación y prueba de forma reproducible.
 
@@ -218,7 +218,7 @@ python src/preprocessing/apply_category_mapping.py
 
 # 2. Análisis y Partición
 python src/preprocessing/validate_dataset.py
-python src/preprocessing/split_dataset.py
+python src/preprocessing/split_dataset_density.py
 
 # 3. Modelado (Entrenamiento)
 python src/training/train_bert.py
