@@ -156,9 +156,9 @@ Se ha desarrollado un pipeline que genera informes detallados en docs/reports/:
 
 * **Reporte de Métricas (test_metrics_report.txt)**: Contiene Precision, Recall y F1-Score por clase. Se prioriza el F1-Macro como indicador global de éxito.
 
-* **Matriz de Confusión (confusion_matrix.png)**: Visualización con ejes etiquetados en inglés (True Label vs Predicted Label) para identificar ambigüedades entre cláusulas.
+* **Matriz de Confusión (confusion_matrix_baseline.png)**: Visualización con ejes etiquetados en inglés (True Label vs Predicted Label) para identificar ambigüedades entre cláusulas.
 
-* **Auditoría Detallada (test_detailed_results.csv)**:Informe fila por fila que permite una revisión cualitativa.
+* **Auditoría Detallada (test_detailed_baseline.csv)**:Informe fila por fila que permite una revisión cualitativa.
     * **Columnas**: Incluye el texto de la cláusula, categoría real, categoría predicha, y confidence_pct (Confianza formateada para lectura en Excel).
 
 ---
