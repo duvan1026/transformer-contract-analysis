@@ -67,16 +67,37 @@ INFERENCE_JSON_DIR_NAME = INFERENCE_DIR / "json_outputs"
 MODEL_BERT_FINAL_DIR = MODEL_DATA_DIR / "bert_final"
 
 MODEL_BERT_BASELINE_DIR = MODEL_DATA_DIR / "bert_baseline"
+MODEL_BERT_BALANCED_DIR = MODEL_DATA_DIR / "bert_balanced" # Ruta para el modelo con pesos de clase
+
 MODEL_BERT_CHECKPOINT = MODEL_BERT_BASELINE_DIR / "checkpoint-300"
 
 # ==============================
 # RESULTADOS Y MÉTRICAS (docs)
 # ==============================
 
+# Directorio principal para la generación de evidencias y reportes
 REPORTS_DIR = DOCS_DIR / "reports"
-DATASET_REPORT_FILE = REPORTS_DIR / "dataset_report.txt"
-TEST_DETAILED_RESULT = REPORTS_DIR / "test_detailed_results.csv"
-CONFUSION_MATRIX = REPORTS_DIR / "confusion_matrix.png"
-TEST_METRICS_REPORT = REPORTS_DIR / "test_metrics_report.txt"
 
+# Reporte estructural del dataset (distribución de clases, huérfanos, splits)
+DATASET_REPORT_FILE = REPORTS_DIR / "dataset_report.txt"
+
+
+# --- Evaluación: Modelo Baseline (Control sin pesos de clase) ---
+
+# Auditoría detallada de inferencia (texto original, etiqueta real vs. predicha)
+TEST_DETAILED_BASELINE = REPORTS_DIR / "test_detailed_baseline.csv"
+# Representación visual de aciertos y dispersión de errores
+CONFUSION_MATRIX_BASELINE = REPORTS_DIR / "confusion_matrix_baseline.png"
+# Consolidado de métricas clave (Accuracy, Precision, Recall, F1-Score)
+TEST_METRICS_REPORT_BASELINE = REPORTS_DIR / "test_metrics_report_baseline.txt"
+
+
+# --- Evaluación: Modelo Balanceado (Propuesta con pesos de clase) ---
+
+# Auditoría detallada de inferencia (texto original, etiqueta real vs. predicha)
+TEST_DETAILED_BALANCED = REPORTS_DIR / "test_detailed_balanced.csv"
+# Representación visual de aciertos y dispersión de errores
+CONFUSION_MATRIX_BALANCED = REPORTS_DIR / "confusion_matrix_balanced.png"
+# Consolidado de métricas clave del modelo propuesto
+TEST_METRICS_REPORT_BALANCED = REPORTS_DIR / "test_metrics_report_balanced.txt"
 
