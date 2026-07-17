@@ -1,5 +1,6 @@
 import torch
 import sys
+import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -15,14 +16,21 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 # Configuración de rutas (ajusta según tu proyecto)
 from src.config.paths import (
-    TEST_DATASET, MODEL_BERT_FINAL_DIR, TEST_DETAILED_RESULT, 
-    CONFUSION_MATRIX, TEST_METRICS_REPORT
+    TEST_DATASET, 
+    MODEL_BERT_FINAL_DIR, 
+    MODEL_BERT_BALANCED_DIR,
+    TEST_DETAILED_BASELINE,
+    TEST_DETAILED_BALANCED,
+    CONFUSION_MATRIX_BASELINE, 
+    CONFUSION_MATRIX_BALANCED,
+    TEST_METRICS_REPORT,
+    TEST_METRICS_REPORT_BALANCED
     )
 
 from src.training.bert_dataset import ContractDataset
 from src.config.label_mapping import ID2LABEL
 
-def run_evaluation():
+def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
     """
     Ejecuta el pipeline de evaluación final:
     1. Carga el modelo entrenado.
@@ -36,8 +44,8 @@ def run_evaluation():
 
     # 1. Cargar Tokenizer y Modelo
     # Cargamos el tokenizador y el modelo desde la carpeta donde se guardó el mejor checkpoint
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_BERT_FINAL_DIR)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_BERT_FINAL_DIR).to(device)
+    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    model = AutoModelForSequenceClassification.from_pretrained(model_dir).to(device)
 
     # IMPORTANTE: Poner el modelo en modo evaluación para desactivar capas de Dropout
     model.eval()
@@ -91,8 +99,8 @@ def run_evaluation():
     results_df["is_correct"] = results_df["categoria"].str.lower() == results_df["pred_label_name"].str.lower()
 
     # 4. Guardar CSV de Auditoría (Errores y Aciertos)
-    results_df.to_csv(TEST_DETAILED_RESULT, index=False)
-    print(f"Reporte detallado guardado en: {TEST_DETAILED_RESULT}")
+    results_df.to_csv(output_csv, index=False)
+    print(f"Reporte detallado guardado en: {output_csv}")
 
     # 5. VISUALIZACIÓN: MATRIZ DE CONFUSIÓN
     cm = confusion_matrix(all_labels, all_preds)
@@ -108,12 +116,12 @@ def run_evaluation():
 
     # tight_layout evita que se corten las etiquetas de los ejes al guardar la imagen
     plt.tight_layout()
-    plt.savefig(CONFUSION_MATRIX, dpi=300)
+    plt.savefig(output_cm, dpi=300)
     plt.close()
     
     # 6. REPORTE FINAL DE MÉTRICAS (TXT)
     report = classification_report(all_labels, all_preds, target_names=list(ID2LABEL.values()))
-    with open(TEST_METRICS_REPORT, "w") as f:
+    with open(output_txt, "w") as f:
         f.write("REPORTE DE EVALUACIÓN FINAL - ANÁLISIS CONTRACTUAL BERT\n")
         f.write("="*60 + "\n")
         f.write(f"Accuracy General: {accuracy_score(all_labels, all_preds):.4f}\n\n")
@@ -130,4 +138,35 @@ def run_evaluation():
 
 
 if __name__ == "__main__":
-    run_evaluation()
+    # 1. Configurar el menú de consola
+    parser = argparse.ArgumentParser(description="Evaluar modelos BERT en el conjunto de Test.")
+    
+    # Añadimos el argumento con el valor por defecto
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        choices=["baseline", "balanced"], 
+        default="baseline",  # <-- Aquí está la magia que solicitaste
+        help="Elige qué modelo evaluar: 'baseline' (por defecto) o 'balanced'."
+    )
+    
+    # Leer lo que el usuario escribió en la consola
+    args = parser.parse_args()
+
+    # 2. Enrutar las variables según la elección
+    if args.model == "baseline":
+        run_evaluation(
+            model_dir=MODEL_BERT_FINAL_DIR,
+            output_csv=TEST_DETAILED_BASELINE,
+            output_cm=CONFUSION_MATRIX_BASELINE,
+            output_txt=TEST_METRICS_REPORT,
+            model_name="BERT Baseline (Sin Pesos)"
+        )
+    elif args.model == "balanced":
+        run_evaluation(
+            model_dir=MODEL_BERT_BALANCED_DIR,
+            output_csv=TEST_DETAILED_BALANCED,
+            output_cm=CONFUSION_MATRIX_BALANCED,
+            output_txt=TEST_METRICS_REPORT_BALANCED,
+            model_name="BERT Balanceado (Con Pesos de Clase)"
+        )
