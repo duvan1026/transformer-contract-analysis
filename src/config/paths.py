@@ -29,7 +29,9 @@ SRC_DIR  = BASE_DIR / "src"
 # ==============================
 
 META_DATA_DIR = DATA_DIR / "metadata"
-MASTER_DOCUMENT_REGISTRY = META_DATA_DIR / "master_document_registry.csv"
+
+MASTER_REGISTRY_BASELINE = META_DATA_DIR / "master_registry_baseline.csv"
+MASTER_REGISTRY_BALANCED = META_DATA_DIR / "master_registry_balanced.csv"
 
 RAW_DATA_DIR = DATA_DIR / "raw"
 CUAD_JSON = RAW_DATA_DIR / "CUAD_v1.json"
@@ -41,11 +43,21 @@ DATASET_TAXONOMY_CSV = PROCESSED_DATA_DIR / "dataset_taxonomy.csv"
 DATASET_NONE_MASTER_CSV = PROCESSED_DATA_DIR / "dataset_none_master.csv"
 DATASET_WITH_NONE_CSV = PROCESSED_DATA_DIR / "dataset_with_none.csv"
 
+# ---------- Inference -------------------------
 INFERENCE_DIR = PROCESSED_DATA_DIR / "inference"
-FRAGMENTS_DATASET = INFERENCE_DIR / "batch_fragments.csv"
-REJECTED_AUDIT_DATASET = INFERENCE_DIR / "rejected_fragments_audit.csv"
 
-INFERENCE_SCORED_RESULTS = INFERENCE_DIR / "inference_scored_results.csv"
+# --- CARRIL 1: INFERENCIA BASELINE ---
+INFERENCE_BASELINE_DIR = INFERENCE_DIR / "baseline"
+FRAGMENTS_BASELINE = INFERENCE_BASELINE_DIR / "batch_fragments.csv"
+REJECTED_AUDIT_BASELINE = INFERENCE_BASELINE_DIR / "rejected_fragments_audit.csv"
+SCORED_RESULTS_BASELINE = INFERENCE_BASELINE_DIR / "inference_scored_results.csv"
+
+# --- CARRIL 2: INFERENCIA BALANCEADA ---
+INFERENCE_BALANCED_DIR = INFERENCE_DIR / "balanced"
+FRAGMENTS_BALANCED = INFERENCE_BALANCED_DIR / "batch_fragments.csv"
+REJECTED_AUDIT_BALANCED = INFERENCE_BALANCED_DIR / "rejected_fragments_audit.csv"
+SCORED_RESULTS_BALANCED = INFERENCE_BALANCED_DIR / "inference_scored_results.csv"
+
 
 SPLITS_DIR = PROCESSED_DATA_DIR / "splits"
 TRAIN_DATASET = SPLITS_DIR / "train.csv"
