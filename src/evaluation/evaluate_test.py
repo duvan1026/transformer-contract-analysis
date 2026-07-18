@@ -23,7 +23,7 @@ from src.config.paths import (
     TEST_DETAILED_BALANCED,
     CONFUSION_MATRIX_BASELINE, 
     CONFUSION_MATRIX_BALANCED,
-    TEST_METRICS_REPORT,
+    TEST_METRICS_REPORT_BASELINE,
     TEST_METRICS_REPORT_BALANCED
     )
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
             model_dir=MODEL_BERT_FINAL_DIR,
             output_csv=TEST_DETAILED_BASELINE,
             output_cm=CONFUSION_MATRIX_BASELINE,
-            output_txt=TEST_METRICS_REPORT,
+            output_txt=TEST_METRICS_REPORT_BASELINE,
             model_name="BERT Baseline (Sin Pesos)"
         )
     elif args.model == "balanced":
