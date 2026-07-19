@@ -11,6 +11,7 @@ los documentos procesados al estado definitivo 'Clasificado'.
 """
 
 import sys
+import argparse
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -23,10 +24,14 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 # Importación de rutas globales de configuración
 from src.config.paths import (
-    FRAGMENTS_DATASET,
-    INFERENCE_SCORED_RESULTS,
-    MASTER_DOCUMENT_REGISTRY,
-    MODEL_BERT_FINAL_DIR
+    MASTER_REGISTRY_BASELINE,
+    MASTER_REGISTRY_BALANCED,
+    FRAGMENTS_BASELINE,
+    FRAGMENTS_BALANCED,
+    SCORED_RESULTS_BASELINE,
+    SCORED_RESULTS_BALANCED,
+    MODEL_BERT_BASELINE_DIR,
+    MODEL_BERT_BALANCED_DIR
 )
 
 # Importación de estándares técnicos y flujos
@@ -41,39 +46,60 @@ from src.config.label_mapping import ID2LABEL
 from src.inference.inference_dataset import BERTInferenceDataset
 
 
-def main():
-    print("=" * 70)
-    print("      INICIANDO PIPELINE DE INFERENCIA ENRIQUECIDA (BERT) - FASE 2")
-    print("=" * 70)
+def main(model_type):
+    print(f"Iniciando Inferencia. Modo seleccionado: {model_type.upper()}")
 
-    # 2. Selección e Inicialización de Hardware (Aceleración por GPU si está disponible)
+    # ==========================================
+    # 1. ENRUTAMIENTO DINÁMICO (BASELINE POR DEFECTO)
+    # ==========================================
+    if model_type == "balanced":
+        print("-> Cargando carril BALANCEADO")
+        registry_path = MASTER_REGISTRY_BALANCED
+        fragments_path = FRAGMENTS_BALANCED
+        results_path = SCORED_RESULTS_BALANCED
+        model_path = MODEL_BERT_BALANCED_DIR
+    else:
+        # POR DEFECTO: BASELINE
+        print("-> Cargando carril BASELINE (Default)")
+        registry_path = MASTER_REGISTRY_BASELINE
+        fragments_path = FRAGMENTS_BASELINE
+        results_path = SCORED_RESULTS_BASELINE
+        model_path = MODEL_BERT_BASELINE_DIR
+
+    # ==========================================
+    # 2. VALIDACIÓN DE ARCHIVOS
+    # ==========================================
+    if not fragments_path.exists():
+        print(f"Error: No se encontró el archivo de fragmentos en {fragments_path}")
+        print(f"Por favor, ejecuta primero: python src/inference/01_prepare_batch_documents.py --model {model_type}")
+        return
+    
+    # ==========================================
+    # 3. CARGA DE MODELO Y TOKENIZADOR
+    # ==========================================
+    print(f"Cargando modelo y tokenizador desde: {model_path}")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForSequenceClassification.from_pretrained(model_path)
+    except Exception as e:
+        print(f"Error al cargar el modelo: {e}")
+        return
+    
+    # Mover a GPU si está disponible
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     print(f"[*] Entorno de hardware detectado: {device}")
 
-    # 3. Control de existencia de datos de entrada
-    if not FRAGMENTS_DATASET.exists():
-        print(f"[ERROR] No se encontró el archivo de fragmentos en: {FRAGMENTS_DATASET}")
-        print("Asegúrate de ejecutar primero el script '01_prepare_batch_documents.py'.")
-        return
-
-    print(f"[*] Cargando fragmentos crudos desde: {FRAGMENTS_DATASET.name}...")
-    df_fragments = pd.read_csv(FRAGMENTS_DATASET)
+    # ==========================================
+    # 4. EJECUCIÓN DE INFERENCIA
+    # ==========================================
+    print(f"[*] Cargando fragmentos crudos desde: {fragments_path.name}...")
+    df_fragments = pd.read_csv(fragments_path)
     
     if df_fragments.empty:
         print("[AVISO] El archivo de fragmentos está vacío. No hay datos para procesar.")
         return
-    print(f"[+] Total de fragmentos cargados para clasificar: {len(df_fragments)}")
-
-    # 4. Carga del "Cerebro" de la IA (Pesos del modelo BERT Final entrenado)
-    print(f"[*] Cargando modelo y tokenizador desde: {MODEL_BERT_FINAL_DIR.name}...")
-    print(MODEL_BERT_FINAL_DIR)
-    try:
-        # 1. Cargamos el tokenizador y el modelo desde la carpeta donde se guardó el mejor checkpoint
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_BERT_FINAL_DIR)
-        model = AutoModelForSequenceClassification.from_pretrained(MODEL_BERT_FINAL_DIR).to(device)
-    except Exception as e:
-        print(f"[ERROR] Error crítico al cargar el modelo pre-entrenado: {e}")
-        return
+    print(f"Procesando {len(df_fragments)} fragmentos...")
 
     # 5. Configuración de Seguridad para el Entorno de Inferencia
     model.eval()  # Desactiva capas de Dropout y normalizaciones de entrenamiento
@@ -138,35 +164,37 @@ def main():
         df_fragments["pred_raw"]
     )
 
-    # 10. Persistencia Física del Dataset Enriquecido Final
-    print(f"[*] Guardando resultados enriquecidos en: {INFERENCE_SCORED_RESULTS}...")
+    # ==========================================
+    # 10. GUARDADO DE RESULTADOS
+    # ==========================================
+    print(f"[*] Guardando resultados enriquecidos en: {results_path}...")
     try:
         # Asegurar creación del directorio destino por seguridad
-        INFERENCE_SCORED_RESULTS.parent.mkdir(parents=True, exist_ok=True)
-        df_fragments.to_csv(INFERENCE_SCORED_RESULTS, index=False, encoding="utf-8")
-        print("[+] Archivo de resultados guardado con éxito.")
+        results_path.parent.mkdir(parents=True, exist_ok=True)
+        df_fragments.to_csv(results_path, index=False, encoding="utf-8")
+        print(f"Resultados de inferencia guardados en: {results_path}")
     except Exception as e:
         print(f"[ERROR] Error crítico al escribir los resultados en disco: {e}")
         return
 
     # 11. Commit Final en el Registro Maestro de Documentos (Bulk Update)
-    print(f"[*] Actualizando estados en el Registro Maestro: {MASTER_DOCUMENT_REGISTRY.name}...")
-    if MASTER_DOCUMENT_REGISTRY.exists():
+    print(f"[*] Actualizando estados en el Registro Maestro: {registry_path.name}...")
+    if registry_path.exists():
         try:
-            df_registry = pd.read_csv(MASTER_DOCUMENT_REGISTRY)
+            df_registry = pd.read_csv(registry_path)
             
-            # Obtener el listado único de los IDs de documentos que acabamos de procesar linealmente
+            # Identificar qué documentos acabamos de procesar
             processed_document_ids = df_fragments["id_documento"].unique()
             
-            # Identificar las filas correspondientes en el maestro
-            mask = df_registry["id_documento"].isin(processed_document_ids)
-            
-            # Cambiar su estado masivamente de 'Utilizado' a 'Clasificado' (SCORED)
+            # Pasar de IN_PROGRESS a SCORED
+            mask = df_registry["id_documento"].isin(processed_document_ids) & (df_registry['estado'] == DOC_STATES["IN_PROGRESS"])         
             df_registry.loc[mask, "estado"] = DOC_STATES["SCORED"]
             
-            # Guardar cambios definitivos
-            df_registry.to_csv(MASTER_DOCUMENT_REGISTRY, index=False, encoding="utf-8")
-            print(f"[+] Éxito: {len(processed_document_ids)} contratos marcados como 'Clasificado' (SCORED).")
+            # Guardar el registro actualizado
+            df_registry.to_csv(registry_path, index=False, encoding="utf-8")
+
+            num_actualizados = mask.sum()
+            print(f"Éxito. {num_actualizados} documentos marcados como 'SCORED' en {registry_path.name}.")
             
         except Exception as e:
             print(f"[ERROR] No se pudo actualizar el registro maestro debido a: {e}")
@@ -188,4 +216,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Ejecuta la inferencia sobre fragmentos preparados.")
+    
+    # Hacemos el argumento OPCIONAL con default 'baseline' para mayor seguridad
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        choices=["baseline", "balanced"],
+        default="baseline",
+        help="Selecciona el entorno del modelo (default: baseline)."
+    )
+    
+    args = parser.parse_args()
+    main(args.model)
