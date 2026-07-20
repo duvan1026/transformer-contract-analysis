@@ -219,12 +219,15 @@ __marimo__/
 ml_env/
 
 # Ignorar modelos y pesos pesados
-models/bert_baseline/
-models/bert_final/
+models/
 *.bin
 *.safetensors
 *.pt
 
 # Ignorar salidas generadas en la evaluación (JSONs y ZIPs)
-data/processed/inference/*/json_outputs/
+data/processed/inference/
+data/metadata/
 data/processed/*.zip
+
+docs/architecture/complete_map.txt
+data/processed/*.csv

@@ -19,7 +19,7 @@ FILTER_PURE_NUMBERS = True
 RANDOM_SEED = 42
 
 # --- DELIMITADORES ---
-# Define qué considera el sistema como un salto de párrafo natural
+# Delimitador oficial que identifica bloques o párrafos físicos completos
 PARAGRAPH_DELIMITER = r'([^\n]+(?:\n[^\n]+)*)'
 
 # Regex para detectar fin de oraciones (usado en subdivisiones)
@@ -45,6 +45,21 @@ DOC_STATES = {
     "SCORED": "Clasificado",        # Fase 2 completada (BERT ya calculó scores)
     "NONE": "Ninguno"
 }
+
+# --- CONFIGURACIÓN CRÍTICA PARA LA GENERACIÓN DE LA CLASE NONE ---
+
+# Tamaño mínimo en caracteres para simular un párrafo denso
+# Alrededor de 40-50 palabras para evitar el "atajo de longitud" (shortcut Learning)
+NONE_MIN_CHARS_THRESHOLD = 40
+
+# Densidad alfabética mínima requerida
+# Basado en los estándares de limpieza de Gopher (DeepMind) y ROOTS (BigScience)
+# 0.70 significa que el 70% del párrafo deben ser letras de la A a la Z
+NONE_MIN_ALPHA_DENSITY = 0.70
+
+# Expresión regular para aislar únicamente letras puras (usada para calcular la densidad)
+ALPHABETIC_CHARS_REGEX = r'[a-zA-Z]'
+
 
 # --- CONFIGURACIÓN DE INFERENCIA Y EVALUACIÓN (Fase 2) ---
 

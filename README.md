@@ -132,7 +132,7 @@ Genera estadísticas de distribución para verificar la calidad antes del entren
 
 * **Salida**: docs/dataset_report.txt (Reporte de balances y conteos).
 
-### D. Generación de Splits (split_dataset.py)
+### D. Generación de Splits (split_dataset_density.py)
 
 Divide los datos en entrenamiento, validación y prueba de forma reproducible.
 
@@ -156,16 +156,16 @@ Se ha desarrollado un pipeline que genera informes detallados en docs/reports/:
 
 * **Reporte de Métricas (test_metrics_report.txt)**: Contiene Precision, Recall y F1-Score por clase. Se prioriza el F1-Macro como indicador global de éxito.
 
-* **Matriz de Confusión (confusion_matrix.png)**: Visualización con ejes etiquetados en inglés (True Label vs Predicted Label) para identificar ambigüedades entre cláusulas.
+* **Matriz de Confusión (confusion_matrix_baseline.png)**: Visualización con ejes etiquetados en inglés (True Label vs Predicted Label) para identificar ambigüedades entre cláusulas.
 
-* **Auditoría Detallada (test_detailed_results.csv)**:Informe fila por fila que permite una revisión cualitativa.
+* **Auditoría Detallada (test_detailed_baseline.csv)**:Informe fila por fila que permite una revisión cualitativa.
     * **Columnas**: Incluye el texto de la cláusula, categoría real, categoría predicha, y confidence_pct (Confianza formateada para lectura en Excel).
 
 ---
 
 ## 6. Fase de Inferencia en Producción (Framework)
 
-Este proyecto no solo entrena un modelo, sino que funciona como un framework listo para clasificar nuevos contratos masivamente. Se ha implementado un sistema de trazabilidad basado en un Registro Maestro (`master_document_registry.csv`) que controla el ciclo de vida de cada documento (`Disponible` -> `Utilizado` -> `Clasificado`).
+Este proyecto no solo entrena un modelo, sino que funciona como un framework listo para clasificar nuevos contratos masivamente. Se ha implementado un sistema de trazabilidad basado en un Registro Maestro (`MASTER_REGISTRY_BASELINE.csv`) que controla el ciclo de vida de cada documento (`Disponible` -> `Utilizado` -> `Clasificado`).
 
 * **Paso 0: Inicialización del Inventario (`src/data/00_init_master_registry.py`)**
   Rastrea todos los contratos disponibles y los splits de entrenamiento previos para establecer el estado inicial del sistema.
@@ -174,7 +174,7 @@ Este proyecto no solo entrena un modelo, sino que funciona como un framework lis
   Toma los contratos en estado `Disponible`, los divide en párrafos y fragmentos (respetando la longitud máxima de tokens de BERT) y genera un archivo de carga para la GPU (`batch_fragments.csv`), cambiando el estado de los documentos a `Utilizado`.
 
 * **Paso 2: Clasificación y Reglas de Negocio (`src/inference/02_run_inference.py`)**
-  Orquesta el modelo BERT para analizar masivamente los fragmentos. Aplica un umbral de confianza estricto (ej. 75%). Si la IA no supera este umbral, el fragmento se envía a una categoría `NONE` para revisión manual. Al finalizar, guarda el dataset enriquecido (`inference_scored_results.csv`) y marca los contratos como `Clasificado`.
+  Orquesta el modelo BERT para analizar masivamente los fragmentos. Aplica un umbral de confianza estricto (ej. 75%). Si la IA no supera este umbral, el fragmento se envía a una categoría `NONE` para revisión manual. Al finalizar, guarda el dataset enriquecido (`SCORED_RESULTS_BASELINE.csv`) y marca los contratos como `Clasificado`.
 
 * **Paso 3: Evaluación de Umbrales y Estructuración JSON (`src/inference/03_evaluate_results.py`)**
   Evalúa el rendimiento del modelo frente a diferentes umbrales de confianza (ej. 0.70 a 0.95) para simular una regla de descarte (`NONE` implícito) que mitigue los Falsos Positivos. Por cada umbral procesado, genera:
@@ -218,7 +218,7 @@ python src/preprocessing/apply_category_mapping.py
 
 # 2. Análisis y Partición
 python src/preprocessing/validate_dataset.py
-python src/preprocessing/split_dataset.py
+python src/preprocessing/split_dataset_density.py
 
 # 3. Modelado (Entrenamiento)
 python src/training/train_bert.py
@@ -282,7 +282,9 @@ Lanza el contenedor mapeando las carpetas de datos, modelos y reportes con tu eq
 En PowerShell (Windows):
 
 ```
-docker run --rm -v "${PWD}/data:/app/data" -v "${PWD}/models:/app/models" -v "${PWD}/docs/reports:/app/docs/reports" pipeline-tfm
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm baseline
+
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm balanced
 ```
 
 En Bash (Linux/Mac):

@@ -10,7 +10,8 @@ LABEL2ID = {
     "governing law": 1,
     "limitation of liability": 2,
     "non-compete": 3,
-    "termination for convenience": 4
+    "termination for convenience": 4,
+    "none": 5  
 }
 
 ID2LABEL = {v: k for k, v in LABEL2ID.items()}
