@@ -17,7 +17,7 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 # Configuración de rutas (ajusta según tu proyecto)
 from src.config.paths import (
     TEST_DATASET, 
-    MODEL_BERT_FINAL_DIR, 
+    MODEL_BERT_BASELINE_DIR, 
     MODEL_BERT_BALANCED_DIR,
     TEST_DETAILED_BASELINE,
     TEST_DETAILED_BALANCED,
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # 2. Enrutar las variables según la elección
     if args.model == "baseline":
         run_evaluation(
-            model_dir=MODEL_BERT_FINAL_DIR,
+            model_dir=MODEL_BERT_BASELINE_DIR,
             output_csv=TEST_DETAILED_BASELINE,
             output_cm=CONFUSION_MATRIX_BASELINE,
             output_txt=TEST_METRICS_REPORT_BASELINE,

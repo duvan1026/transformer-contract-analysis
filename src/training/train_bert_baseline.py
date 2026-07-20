@@ -25,7 +25,7 @@ from src.config.paths import (
     TRAIN_DATASET, 
     VAL_DATASET, 
     MODEL_BERT_BASELINE_DIR,
-    MODEL_BERT_FINAL_DIR
+    MODEL_BERT_BASELINE_DIR
 )
 
 
@@ -130,5 +130,5 @@ trainer.train()
 
 # Guardado definitivo del modelo óptimo y su tokenizer asociado.
 # Esto genera los archivos necesarios (.bin, .json) para realizar predicciones futuras.
-trainer.save_model(MODEL_BERT_FINAL_DIR)
-tokenizer.save_pretrained(MODEL_BERT_FINAL_DIR)
+trainer.save_model(MODEL_BERT_BASELINE_DIR)
+tokenizer.save_pretrained(MODEL_BERT_BASELINE_DIR)
