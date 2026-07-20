@@ -226,6 +226,7 @@ models/
 
 # Ignorar salidas generadas en la evaluación (JSONs y ZIPs)
 data/processed/inference/
+data/metadata/
 data/processed/*.zip
 
 docs/architecture/complete_map.txt
