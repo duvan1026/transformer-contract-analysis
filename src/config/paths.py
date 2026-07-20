@@ -51,13 +51,14 @@ INFERENCE_BASELINE_DIR = INFERENCE_DIR / "baseline"
 FRAGMENTS_BASELINE = INFERENCE_BASELINE_DIR / "batch_fragments.csv"
 REJECTED_AUDIT_BASELINE = INFERENCE_BASELINE_DIR / "rejected_fragments_audit.csv"
 SCORED_RESULTS_BASELINE = INFERENCE_BASELINE_DIR / "inference_scored_results.csv"
+GROUND_TRUTH_BASELINE = INFERENCE_BASELINE_DIR / "ground_truth_results.csv"
 
 # --- CARRIL 2: INFERENCIA BALANCEADA ---
 INFERENCE_BALANCED_DIR = INFERENCE_DIR / "balanced"
 FRAGMENTS_BALANCED = INFERENCE_BALANCED_DIR / "batch_fragments.csv"
 REJECTED_AUDIT_BALANCED = INFERENCE_BALANCED_DIR / "rejected_fragments_audit.csv"
 SCORED_RESULTS_BALANCED = INFERENCE_BALANCED_DIR / "inference_scored_results.csv"
-
+GROUND_TRUTH_BALANCED = INFERENCE_BALANCED_DIR / "ground_truth_results.csv"
 
 SPLITS_DIR = PROCESSED_DATA_DIR / "splits"
 TRAIN_DATASET = SPLITS_DIR / "train.csv"
@@ -72,14 +73,15 @@ JSON_OUTPUTS_DIR = INFERENCE_DIR / "extracted_contracts"
 INFERENCE_CONFUSION_MATRIX_IMAGE = INFERENCE_DIR / "matriz_confusion_fragmentos.png"
 INFERENCE_JSON_DIR_NAME = INFERENCE_DIR / "json_outputs"
 
+REPORT_FULL_CONFIDENCE_NAME = "full_confidence_report"
+REPORT_THRESHOLD_PREFIX = "threshold_"
+
 # ==============================
 # MODELOS Y ENTRENAMIENTO (models/)
 # ==============================
 
-MODEL_BERT_FINAL_DIR = MODEL_DATA_DIR / "bert_final"
-
 MODEL_BERT_BASELINE_DIR = MODEL_DATA_DIR / "bert_baseline"
-MODEL_BERT_BALANCED_DIR = MODEL_DATA_DIR / "bert_balanced" # Ruta para el modelo con pesos de clase
+MODEL_BERT_BALANCED_DIR = MODEL_DATA_DIR / "bert_balanced"
 
 MODEL_BERT_CHECKPOINT = MODEL_BERT_BASELINE_DIR / "checkpoint-300"
 
