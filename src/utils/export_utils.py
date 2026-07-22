@@ -9,9 +9,8 @@ import json
 import pandas as pd
 import datetime
 from pathlib import Path
-from src.config.label_mapping import ID2LABEL
 
-def generate_contract_jsons(df: pd.DataFrame, umbral: float, carpeta_experimento: Path):
+def generate_contract_jsons(df: pd.DataFrame, umbral: float, carpeta_experimento: Path, id2label: dict):
     """
     Agrupa los fragmentos predichos por contrato y genera un archivo JSON por cada uno.
     Estructura la salida para que sea consumible por un sistema o interfaz externa.
@@ -24,7 +23,7 @@ def generate_contract_jsons(df: pd.DataFrame, umbral: float, carpeta_experimento
     json_dir = carpeta_experimento / "json_outputs"
     json_dir.mkdir(parents=True, exist_ok=True)
     
-    valid_classes = [label.lower().strip() for label in ID2LABEL.values()]
+    valid_classes = [label.lower().strip() for label in id2label.values()]
     processing_date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     
     # Tolerancia por si la columna de texto cambia de nombre en futuras versiones

@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
-from src.config.label_mapping import ID2LABEL
 
-def save_confusion_matrix_image(df: pd.DataFrame, output_path: Path, title_suffix: str = ""):
+def save_confusion_matrix_image(df: pd.DataFrame, output_path: Path, id2label: dict, title_suffix: str = ""):
     """
     Genera y guarda una Matriz de Confusión en formato PNG usando colores corporativos (Blues).
     
@@ -22,7 +21,7 @@ def save_confusion_matrix_image(df: pd.DataFrame, output_path: Path, title_suffi
         title_suffix: Texto dinámico para el título (ej. "Umbral 75%").
     """
     # Estandarizamos el orden de las etiquetas, poniendo NONE primero
-    labels_order = ["NONE"] + [str(lbl).strip().upper() for lbl in ID2LABEL.values()]
+    labels_order = ["NONE"] + [str(lbl).strip().upper() for lbl in id2label.values()]
     
     # Asegurar que no haya duplicados si el mapeo los tuviera
     labels_order = list(dict.fromkeys(labels_order))

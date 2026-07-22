@@ -10,7 +10,6 @@ import json
 import pandas as pd
 from src.config.paths import CUAD_JSON, CATEGORY_MAPPING_FILE
 from src.config.text_standards import OVERLAP_THRESHOLD_CHARS
-from src.config.label_mapping import ID2LABEL
 
 def load_category_mapping() -> dict:
     """Carga y limpia el mapeo de categorías desde el Excel oficial."""
@@ -35,14 +34,14 @@ def load_category_mapping() -> dict:
     return mapping_dict
 
 
-def load_ground_truth() -> dict:
+def load_ground_truth(id2label: dict) -> dict:
     """Carga el JSON de CUAD y extrae las coordenadas reales por documento."""
     with open(CUAD_JSON, "r", encoding="utf-8") as f:
         cuad_data = json.load(f)["data"]
         
     category_map = load_category_mapping()
     annotations = {}
-    valid_classes = [label.lower().strip() for label in ID2LABEL.values()]
+    valid_classes = [label.lower().strip() for label in id2label.values()]
     
     for doc in cuad_data:
         doc_title = doc["title"].strip().lower()
