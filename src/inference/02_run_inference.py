@@ -39,7 +39,8 @@ from src.config.text_standards import (
     DOC_STATES
 )
 
-from src.config.label_mapping import ID2LABEL
+# Importar los diccionarios específicos en lugar del genérico
+from src.config.label_mapping import ID2LABEL_BASELINE, ID2LABEL_BALANCED
 # Importación de infraestructura modular
 from src.inference.inference_dataset import BERTInferenceDataset
 
@@ -55,11 +56,13 @@ def main(model_type):
         fragments_path = FRAGMENTS_BALANCED
         results_path = SCORED_RESULTS_BALANCED
         model_path = MODEL_BERT_BALANCED_DIR
+        current_id2label = ID2LABEL_BALANCED
     else:
         registry_path = MASTER_REGISTRY_BASELINE
         fragments_path = FRAGMENTS_BASELINE
         results_path = SCORED_RESULTS_BASELINE
         model_path = MODEL_BERT_BASELINE_DIR
+        current_id2label = ID2LABEL_BASELINE
 
     # ==========================================
     # 2. VALIDACIÓN DE ARCHIVOS
@@ -84,7 +87,7 @@ def main(model_type):
     print(f"[*] Hardware activo: {device}")
 
     # Usar la ÚNICA FUENTE DE VERDAD (label_mapping) ignorando la configuración defectuosa del modelo
-    model_id2label = {int(k): str(v).strip().upper() for k, v in ID2LABEL.items()}
+    model_id2label = {int(k): str(v).strip().upper() for k, v in current_id2label.items()}
     print(f"[*] Clases detectadas nativamente: {list(model_id2label.values())}")
 
     # ==========================================
