@@ -19,7 +19,7 @@ from transformers import (
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.training.bert_dataset import ContractDataset
-from src.config.label_mapping import MODEL_NAME, NUM_LABELS
+from src.config.label_mapping import MODEL_NAME, NUM_LABELS_BALANCED, LABEL2ID_BALANCED
 from src.config.training_config import RANDOM_SEED 
 
 from src.config.paths import (
@@ -41,8 +41,8 @@ set_reproducibility(RANDOM_SEED)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-train_dataset = ContractDataset(TRAIN_DATASET, tokenizer=tokenizer)
-val_dataset = ContractDataset(VAL_DATASET, tokenizer=tokenizer)
+train_dataset = ContractDataset(TRAIN_DATASET, tokenizer=tokenizer, label2id=LABEL2ID_BALANCED)
+val_dataset = ContractDataset(VAL_DATASET, tokenizer=tokenizer, label2id=LABEL2ID_BALANCED)
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
@@ -81,7 +81,7 @@ class BalancedTrainer(Trainer):
 
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME,
-    num_labels=NUM_LABELS
+    num_labels=NUM_LABELS_BALANCED
 )
 
 training_args = TrainingArguments(

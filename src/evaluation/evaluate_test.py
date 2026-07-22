@@ -28,9 +28,15 @@ from src.config.paths import (
     )
 
 from src.training.bert_dataset import ContractDataset
-from src.config.label_mapping import ID2LABEL
 
-def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
+from src.config.label_mapping import (
+    LABEL2ID_BASELINE, 
+    LABEL2ID_BALANCED, 
+    ID2LABEL_BASELINE, 
+    ID2LABEL_BALANCED
+)
+
+def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name, label2id, id2label):
     """
     Ejecuta el pipeline de evaluación final:
     1. Carga el modelo entrenado.
@@ -47,11 +53,11 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     model = AutoModelForSequenceClassification.from_pretrained(model_dir).to(device)
 
-    # IMPORTANTE: Poner el modelo en modo evaluación para desactivar capas de Dropout
+    #  modelo en modo evaluación para desactivar capas de Dropout
     model.eval()
 
     # 2. Preparar Dataset y DataLoader
-    test_dataset = ContractDataset(TEST_DATASET, tokenizer=tokenizer)
+    test_dataset = ContractDataset(TEST_DATASET, tokenizer=tokenizer, label2id=label2id)
     # batch_size=16 es un balance seguro entre velocidad y uso de memoria VRAM
     test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
@@ -89,7 +95,7 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
     # 4. CONSOLIDACIÓN DE RESULTADOS Y AUDITORÍA
     results_df = df_test_raw.copy()
     results_df["pred_label_id"] = all_preds
-    results_df["pred_label_name"] = [ID2LABEL[p] for p in all_preds]
+    results_df["pred_label_name"] = [id2label[p] for p in all_preds]
 
     # Redondeamos la confianza para legibilidad
     results_df["confidence"] = np.round(all_confidences, 4)
@@ -102,13 +108,16 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
     results_df.to_csv(output_csv, index=False)
     print(f"Reporte detallado guardado en: {output_csv}")
 
+    # Lista de nombres de etiquetas ordenadas explícitamente por ID para la matriz y reporte
+    target_names = [id2label[i] for i in sorted(id2label.keys())]
+
     # 5. VISUALIZACIÓN: MATRIZ DE CONFUSIÓN
     cm = confusion_matrix(all_labels, all_preds)
     plt.figure(figsize=(12, 10))
 
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=list(ID2LABEL.values()), 
-                yticklabels=list(ID2LABEL.values()))
+                xticklabels=target_names, 
+                yticklabels=target_names)
     
     plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
     plt.ylabel('True Label', fontsize=12, fontweight='bold')
@@ -120,7 +129,7 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name):
     plt.close()
     
     # 6. REPORTE FINAL DE MÉTRICAS (TXT)
-    report = classification_report(all_labels, all_preds, target_names=list(ID2LABEL.values()))
+    report = classification_report(all_labels, all_preds, target_names=target_names)
     with open(output_txt, "w") as f:
         f.write("REPORTE DE EVALUACIÓN FINAL - ANÁLISIS CONTRACTUAL BERT\n")
         f.write("="*60 + "\n")
@@ -160,7 +169,9 @@ if __name__ == "__main__":
             output_csv=TEST_DETAILED_BASELINE,
             output_cm=CONFUSION_MATRIX_BASELINE,
             output_txt=TEST_METRICS_REPORT_BASELINE,
-            model_name="BERT Baseline (Sin Pesos)"
+            model_name="BERT Baseline (Sin Pesos)",
+            label2id=LABEL2ID_BASELINE,
+            id2label=ID2LABEL_BASELINE
         )
     elif args.model == "balanced":
         run_evaluation(
@@ -168,5 +179,7 @@ if __name__ == "__main__":
             output_csv=TEST_DETAILED_BALANCED,
             output_cm=CONFUSION_MATRIX_BALANCED,
             output_txt=TEST_METRICS_REPORT_BALANCED,
-            model_name="BERT Balanceado (Con Pesos de Clase)"
+            model_name="BERT Balanceado (Con Pesos de Clase)",
+            label2id=LABEL2ID_BALANCED,
+            id2label=ID2LABEL_BALANCED
         )
