@@ -54,6 +54,9 @@ def extract_spans():
                             answer["answer_start"]
                         ])
 
+    # Asegurar la existencia del directorio antes de escribir
+    DATASET_SPANS_CSV.parent.mkdir(parents=True, exist_ok=True)
+
     # Guardar CSV
     with open(DATASET_SPANS_CSV, "w", newline="", encoding="utf-8") as f:
         

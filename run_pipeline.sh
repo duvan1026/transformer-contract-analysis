@@ -24,6 +24,11 @@ rm -rf data/processed/*
 rm -rf models/*
 rm -rf docs/reports/*
 
+# GARANTIZAR QUE LAS CARPETAS EXISTAN
+mkdir -p data/processed
+mkdir -p models
+mkdir -p docs/reports
+
 echo "[1/4] Ejecutando preprocesamiento común..."
 python src/preprocessing/extract_spans.py
 python src/preprocessing/apply_category_mapping.py
