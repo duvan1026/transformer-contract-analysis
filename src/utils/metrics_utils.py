@@ -7,7 +7,6 @@ simulación de umbrales y cálculo de métricas de desempeño del modelo.
 
 import pandas as pd
 from sklearn.metrics import classification_report
-from src.config.label_mapping import ID2LABEL
 
 def apply_dynamic_threshold(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
@@ -37,7 +36,7 @@ def get_classification_report(df: pd.DataFrame) -> str:
     return output
 
 
-def get_recall_at_k_report(df: pd.DataFrame) -> str:
+def get_recall_at_k_report(df: pd.DataFrame, id2label: dict) -> str:
     """
     Métrica de Negocio. Verifica si la cláusula real del contrato 
     apareció entre los primeros K resultados ordenados por confianza matemática.
@@ -46,7 +45,7 @@ def get_recall_at_k_report(df: pd.DataFrame) -> str:
     output = "=== B. EVALUACIÓN A NIVEL CONTRATO (Recall@K) ===\n"
     output += "Perspectiva Negocio: ¿La cláusula real está en el Top K de sugerencias?\n\n"
     
-    valid_classes = [label.upper().strip() for label in ID2LABEL.values()]
+    valid_classes = [label.upper().strip() for label in id2label.values()]
     
     for cls in valid_classes:
         # Encontramos cómo se llama la columna de probabilidad para esta clase

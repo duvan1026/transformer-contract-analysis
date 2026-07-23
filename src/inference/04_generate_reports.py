@@ -26,12 +26,14 @@ from src.config.paths import (
 )
 from src.config.text_standards import CONFIDENCE_THRESHOLDS
 
+from src.config.label_mapping import ID2LABEL_BASELINE, ID2LABEL_BALANCED
+
 from src.utils.metrics_utils import apply_dynamic_threshold, get_classification_report, get_recall_at_k_report, get_confidence_distribution_report
 from src.utils.visualization_utils import save_confusion_matrix_image
 from src.utils.export_utils import generate_contract_jsons
 
 
-def procesar_baseline(df: pd.DataFrame, out_dir: Path):
+def procesar_baseline(df: pd.DataFrame, out_dir: Path, id2label: dict):
     print(f"[*] Ejecutando evaluación dinámica Baseline para umbrales: {CONFIDENCE_THRESHOLDS}")
     
     for umbral in CONFIDENCE_THRESHOLDS:
@@ -46,17 +48,17 @@ def procesar_baseline(df: pd.DataFrame, out_dir: Path):
         
         reporte_final = f"REPORTE DE EVALUACIÓN BASELINE - UMBRAL: {umbral}\n\n"
         reporte_final += get_classification_report(df_sim)
-        reporte_final += get_recall_at_k_report(df_sim)
+        reporte_final += get_recall_at_k_report(df_sim, id2label)
         
         with open(carpeta_experimento / INFERENCE_METRICS_REPORT.name, "w", encoding="utf-8") as f:
             f.write(reporte_final)
             
         ruta_img = carpeta_experimento / INFERENCE_CONFUSION_MATRIX_IMAGE.name
-        save_confusion_matrix_image(df_sim, ruta_img, f"(Umbral {int(umbral * 100)}%)")
-        generate_contract_jsons(df_sim, umbral, carpeta_experimento)
+        save_confusion_matrix_image(df_sim, ruta_img, id2label, f"(Umbral {int(umbral * 100)}%)")
+        generate_contract_jsons(df_sim, umbral, carpeta_experimento, id2label)
         
 
-def procesar_balanced(df: pd.DataFrame, out_dir: Path):
+def procesar_balanced(df: pd.DataFrame, out_dir: Path, id2label: dict):
     print("[*] Ejecutando evaluación estática Balanced (Confianza Plena)...")
     
     df["pred_final"] = df["pred_raw"]
@@ -68,21 +70,28 @@ def procesar_balanced(df: pd.DataFrame, out_dir: Path):
     reporte_final = "REPORTE DE EVALUACIÓN BALANCED - CONFIANZA PLENA\n\n"
     reporte_final += get_classification_report(df)
     reporte_final += get_confidence_distribution_report(df)
-    reporte_final += get_recall_at_k_report(df)
+    reporte_final += get_recall_at_k_report(df, id2label)
     
     with open(carpeta_experimento / INFERENCE_METRICS_REPORT.name, "w", encoding="utf-8") as f:
         f.write(reporte_final)
         
     ruta_img = carpeta_experimento / INFERENCE_CONFUSION_MATRIX_IMAGE.name
-    save_confusion_matrix_image(df, ruta_img, "(Confianza Plena)")
-    generate_contract_jsons(df, 1.0, carpeta_experimento)
+    save_confusion_matrix_image(df, ruta_img, id2label, "(Confianza Plena)")
+    generate_contract_jsons(df, 1.0, carpeta_experimento, id2label)
 
 
 def main(model_type):
     print(f"[*] Fase 3B: Inteligencia de Negocio - MODO: {model_type.upper()}")
 
-    input_path = GROUND_TRUTH_BALANCED if model_type == "balanced" else GROUND_TRUTH_BASELINE
-    out_dir = INFERENCE_BALANCED_DIR if model_type == "balanced" else INFERENCE_BASELINE_DIR
+    # Enrutamiento dinámico completo
+    if model_type == "balanced":
+        input_path = GROUND_TRUTH_BALANCED
+        out_dir = INFERENCE_BALANCED_DIR
+        current_id2label = ID2LABEL_BALANCED
+    else:
+        input_path = GROUND_TRUTH_BASELINE
+        out_dir = INFERENCE_BASELINE_DIR
+        current_id2label = ID2LABEL_BASELINE
 
     if not input_path.exists():
         print(f"[ERROR] Archivo Ground Truth no encontrado: {input_path}")
@@ -91,9 +100,9 @@ def main(model_type):
     df = pd.read_csv(input_path)
 
     if model_type == "baseline":
-        procesar_baseline(df, out_dir)
+        procesar_baseline(df, out_dir, current_id2label)
     else:
-        procesar_balanced(df, out_dir)
+        procesar_balanced(df, out_dir, current_id2label)
         
     print("\n[+] Reportes y JSONs generados con éxito.")
 

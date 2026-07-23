@@ -282,9 +282,9 @@ Lanza el contenedor mapeando las carpetas de datos, modelos y reportes con tu eq
 En PowerShell (Windows):
 
 ```
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm baseline
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh baseline
 
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm balanced
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh balanced
 ```
 
 En Bash (Linux/Mac):

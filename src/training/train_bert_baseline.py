@@ -18,13 +18,12 @@ from transformers import (
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.training.bert_dataset import ContractDataset
-from src.config.label_mapping import MODEL_NAME, NUM_LABELS
+from src.config.label_mapping import MODEL_NAME, NUM_LABELS_BASELINE, LABEL2ID_BASELINE
 from src.config.training_config import RANDOM_SEED 
 
 from src.config.paths import (
     TRAIN_DATASET, 
     VAL_DATASET, 
-    MODEL_BERT_BASELINE_DIR,
     MODEL_BERT_BASELINE_DIR
 )
 
@@ -47,18 +46,14 @@ def set_reproducibility(seed):
 # Ejecutamos la fijación de semilla antes de cargar nada
 set_reproducibility(RANDOM_SEED)
 
-# 1. Configuración Centralizada
-MODEL_NAME = MODEL_NAME          # Usamos bert-base-uncased: 110M de parámetros, arquitectura balanceada para clasificación.
-NUM_LABELS = NUM_LABELS          # Define la dimensión de la capa de salida (una neurona por categoría legal).
-
 # 2. Tokenizer único para todos los sets
 # El Tokenizer debe ser idéntico al del modelo pre-entrenado para mantener el vocabulario.
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 # 3. Datasets 
 # Instanciación de datasets usando nuestra clase personalizada ContractDataset.
-train_dataset = ContractDataset(TRAIN_DATASET, tokenizer=tokenizer)
-val_dataset = ContractDataset(VAL_DATASET, tokenizer=tokenizer)
+train_dataset = ContractDataset(TRAIN_DATASET, tokenizer=tokenizer, label2id=LABEL2ID_BASELINE)
+val_dataset = ContractDataset(VAL_DATASET, tokenizer=tokenizer, label2id=LABEL2ID_BASELINE)
 
 # 4. Definir métricas (Crítico para NLP Legal)
 # Usamos Macro F1 para compensar el desbalance de clases legal
@@ -87,7 +82,7 @@ def compute_metrics(eval_pred):
 # Se carga BERT
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME,
-    num_labels=NUM_LABELS
+    num_labels=NUM_LABELS_BASELINE
 )
 
 # 6. ESTRATEGIA DE ENTRENAMIENTO (HIPERPARÁMETROS)

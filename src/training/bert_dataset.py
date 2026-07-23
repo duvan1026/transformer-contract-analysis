@@ -8,8 +8,6 @@ import pandas as pd
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from transformers import AutoTokenizer
-from src.config.label_mapping import LABEL2ID
-
 
 class ContractDataset(Dataset):
     """
@@ -17,18 +15,20 @@ class ContractDataset(Dataset):
     Hereda de torch.utils.data.Dataset para integrarse con DataLoaders de PyTorch.
     """
 
-    def __init__(self, file_path, tokenizer, max_length=512):
+    def __init__(self, file_path, tokenizer, label2id, max_length=512):
         """
         Inicializa el lector de datos.
         
         Args:
             file_path (str): Ruta al archivo CSV con los datos de entrenamiento/evaluación.
             tokenizer (AutoTokenizer): Tokenizer de BERT cargado para procesar el texto.
+            label2id (dict): Diccionario de mapeo específico (LABEL2ID_BASELINE o LABEL2ID_BALANCED).
             max_length (int): Límite de tokens por secuencia (BERT soporta hasta 512).
         """
 
         self.data = pd.read_csv(file_path)
         self.tokenizer = tokenizer
+        self.label2id = label2id
         self.max_length = max_length
 
 
@@ -59,7 +59,7 @@ class ContractDataset(Dataset):
         # Mapeo semántico: Convertir nombre de categoría (ej. 'Audit Rights') a ID numérico (ej. 0)
         # Se normaliza a minúsculas y se eliminan espacios para evitar desajustes en el diccionario.
         label_name = row["categoria"].lower().strip()
-        label = LABEL2ID[label_name]
+        label = self.label2id[label_name]
 
         # Proceso de Tokenización:
         # - padding: Rellena secuencias cortas con tokens [PAD] hasta llegar a max_length.

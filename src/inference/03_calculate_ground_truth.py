@@ -25,6 +25,8 @@ from src.config.paths import (
 # 2. Importar herramientas espaciales 
 from src.utils.spatial_utils import load_ground_truth, get_true_label_for_fragment
 
+from src.config.label_mapping import ID2LABEL_BASELINE, ID2LABEL_BALANCED
+
 def main(model_type):
     print(f"[*] Fase 3A: Calculando Ground Truth (Cruce Espacial) - MODO: {model_type.upper()}")
 
@@ -34,9 +36,11 @@ def main(model_type):
     if model_type == "balanced":
         input_path = SCORED_RESULTS_BALANCED
         output_path = GROUND_TRUTH_BALANCED
+        current_id2label = ID2LABEL_BALANCED
     else:
         input_path = SCORED_RESULTS_BASELINE
         output_path = GROUND_TRUTH_BASELINE
+        current_id2label = ID2LABEL_BASELINE
 
     if not input_path.exists():
         print(f"[ERROR] Archivo de inferencia no encontrado en: {input_path}")
@@ -52,7 +56,7 @@ def main(model_type):
     df["pred_raw"] = df["pred_raw"].fillna("NONE").astype(str).str.strip().str.upper()
 
     print("[*] Abriendo dataset original humano (CUAD_v1)...")
-    annotations = load_ground_truth()
+    annotations = load_ground_truth(current_id2label)
 
     # ==========================================
     # CÁLCULO MATEMÁTICO DE SUPERPOSICIÓN
