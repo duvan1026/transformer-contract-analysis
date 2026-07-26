@@ -68,8 +68,9 @@ if [ "$EXPERIMENT" == "baseline" ]; then
     
 elif [ "$EXPERIMENT" == "balanced" ]; then
     run_step "[2/4] Generar Clase NONE" python src/preprocessing/generate_none_class.py
+    run_step "[2/4] Generar Clase NONE" python src/preprocessing/inject_none_class.py
     run_step "[2/4] Validar Dataset" python src/preprocessing/validate_dataset.py
-    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_density.py
+    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_stratified.py
     run_step "[2/4] Entrenar BERT Balanced" python src/training/train_bert_balanced.py
 fi
 
