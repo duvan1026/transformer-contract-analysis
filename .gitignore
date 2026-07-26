@@ -224,10 +224,15 @@ models/
 *.safetensors
 *.pt
 
+# Ignorar carpetas completas de procesamiento y reportes
+data/processed/
+docs/reports/
+
 # Ignorar salidas generadas en la evaluación (JSONs y ZIPs)
 data/processed/inference/
-data/metadata/
 data/processed/*.zip
+data/metadata/
+
 
 docs/architecture/complete_map.txt
 data/processed/*.csv
