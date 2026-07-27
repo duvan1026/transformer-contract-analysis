@@ -18,4 +18,4 @@ RANDOM_SEED = 42
 
 # split_dataset_stratified
 # Cuota mínima de documentos por categoría para garantizar representación de clases minoritarias en todos los splits.
-MIN_SAMPLES_PER_CLASS = 10
+MIN_SAMPLES_PER_CLASS = 15

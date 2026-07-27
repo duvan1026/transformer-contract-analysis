@@ -35,7 +35,8 @@ from src.config.text_standards import (
     MODEL_NAME,
     DOC_STATES,
     BATCH_SIZE_DOCS,
-    EXPERIMENT_NAME
+    EXPERIMENT_NAME_INFERENCE_BASELINE,
+    EXPERIMENT_NAME_INFERENCE_BALANCED
 )
 
 # Importar el motor de fragmentación
@@ -50,13 +51,13 @@ def main(model_type):
         inference_dir = INFERENCE_BALANCED_DIR
         fragments_path = FRAGMENTS_BALANCED
         rejected_path = REJECTED_AUDIT_BALANCED
-        experiment_name = "v2_balanced"
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BALANCED
     else:
         registry_path = MASTER_REGISTRY_BASELINE
         inference_dir = INFERENCE_BASELINE_DIR
         fragments_path = FRAGMENTS_BASELINE
         rejected_path = REJECTED_AUDIT_BASELINE
-        experiment_name = "v1_baseline"
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BASELINE
 
     # 2. Crear el directorio de salida aislado si no existe
     inference_dir.mkdir(parents=True, exist_ok=True)
