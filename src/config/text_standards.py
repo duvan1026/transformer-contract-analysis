@@ -35,7 +35,8 @@ MODEL_NAME = "bert-base-uncased"
 
 # Cantidad de documentos para procesar en un lote de inferencia
 BATCH_SIZE_DOCS = 100
-EXPERIMENT_NAME = "v2_inferencia_100_docs"
+EXPERIMENT_NAME_INFERENCE_BASELINE = "v2_inference_Baseline"
+EXPERIMENT_NAME_INFERENCE_BALANCED = "v2_inference_Balanced"
 
 # --- FLUJO DE DOCUMENTOS (Registro Maestro) ---
 DOC_STATES = {
