@@ -238,6 +238,12 @@ docs/architecture/complete_map.txt
 data/processed/*.csv
 
 # Documentos estructuracion codigo
-Empaquetado_XML.py          # organiza todo el codigo en un unico archivo
-contexto_legal_nlp.xml      # salida de la estructuracion del codigo
-run_pipeline.txt            # Transcrición codigo run_pipeline en archivo de texto
+
+# organiza todo el codigo en un unico archivo
+Empaquetado_XML.py
+
+# salida de la estructuracion del codigo
+contexto_legal_nlp.xml
+
+# Transcrición codigo run_pipeline en archivo de texto  
+run_pipeline.txt     
