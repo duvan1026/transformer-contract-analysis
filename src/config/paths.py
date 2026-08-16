@@ -115,3 +115,44 @@ CONFUSION_MATRIX_BALANCED = REPORTS_DIR / "confusion_matrix_balanced.png"
 # Consolidado de métricas clave del modelo propuesto
 TEST_METRICS_REPORT_BALANCED = REPORTS_DIR / "test_metrics_report_balanced.txt"
 
+# ==============================
+# ANÁLISIS DE LONGITUD DE TOKENS (docs/reports/token_length_analysis/)
+# ==============================
+# Análisis diagnóstico (no productivo): compara la longitud de spans en
+# train/val/test contra la longitud real observada en inferencia (ground truth),
+# por clase, para evaluar si la fragmentación por párrafo (H04/H05/H06) amerita
+# rediseño (F02/F03). Se ejecuta manualmente via src/analysis/05_analyze_token_length.py
+
+TOKEN_LENGTH_DIR = REPORTS_DIR / "token_length_analysis"
+
+# --- CARRIL 1: BASELINE ---
+TOKEN_LENGTH_BASELINE_DIR = TOKEN_LENGTH_DIR / "baseline"
+TOKEN_LENGTH_STATS_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "token_length_stats.xlsx"
+TOKEN_LENGTH_BOXPLOT_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "boxplot_tokens_por_clase.png"
+TOKEN_LENGTH_ECDF_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "ecdf_train_vs_inferencia.png"
+TOKEN_LENGTH_LABEL_AUDIT_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "etiquetas_no_reconocidas.csv"
+
+# Volumen bruto de fragmentos por clase y fuente (escala log)
+TOKEN_LENGTH_CLASS_BALANCE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "balance_clases.png"
+# Composicion relativa por fuente, incluyendo NONE
+TOKEN_LENGTH_COMPOSITION_WITH_NONE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_con_none.png"
+# Composicion relativa por fuente, solo clases positivas (NONE excluido y renormalizado)
+TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_solo_positivas.png"
+# Spans de train/val/test en riesgo de truncamiento (>MAX_TOKENS)
+TOKEN_LENGTH_TRUNCATION_RISK_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "riesgo_truncamiento.png"
+# Ranking por clase del % de fragmentos reales en zona de riesgo (solo inferencia)
+TOKEN_LENGTH_RISK_BY_CLASS_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "ranking_riesgo_por_clase.png"
+
+
+# --- CARRIL 2: BALANCED ---
+TOKEN_LENGTH_BALANCED_DIR = TOKEN_LENGTH_DIR / "balanced"
+TOKEN_LENGTH_STATS_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "token_length_stats.xlsx"
+TOKEN_LENGTH_BOXPLOT_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "boxplot_tokens_por_clase.png"
+TOKEN_LENGTH_ECDF_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "ecdf_train_vs_inferencia.png"
+TOKEN_LENGTH_LABEL_AUDIT_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "etiquetas_no_reconocidas.csv"
+
+TOKEN_LENGTH_CLASS_BALANCE_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "balance_clases.png"
+TOKEN_LENGTH_COMPOSITION_WITH_NONE_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "composicion_relativa_con_none.png"
+TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "composicion_relativa_solo_positivas.png"
+TOKEN_LENGTH_TRUNCATION_RISK_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "riesgo_truncamiento.png"
+TOKEN_LENGTH_RISK_BY_CLASS_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "ranking_riesgo_por_clase.png"

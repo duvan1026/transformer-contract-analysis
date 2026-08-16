@@ -81,3 +81,11 @@ TOP_K_CANDIDATES = 3
 OVERLAP_THRESHOLD_CHARS = 30  # Mínimo de caracteres solapados para considerar un "Verdadero Positivo"
 RECALL_TOP_K_VALUES = [1, 3]  # Valores de K para medir el Recall a nivel contrato (Top 1 y Top 3)
 
+# --- UMBRALES DE REFERENCIA PARA EL ANÁLISIS DE LONGITUD  ---
+# Umbral de palabras usado para detectar fragmentos anómalamente largos.
+# Si este valor cambia, el análisis de longitud recalcula automáticamente contra el nuevo umbral.
+TOKEN_LENGTH_WORD_THRESHOLD = 200
+ 
+# Rango de tokens (min, max) donde se observó menor acierto del modelo en el análisis de errores.
+# Editable: si el rango de menor acierto cambia (por ejemplo, tras reentrenar), actualizar aquí.
+TOKEN_LENGTH_RISK_ZONE_TOKENS = (400, 600)
