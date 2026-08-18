@@ -1,12 +1,10 @@
 """
-src/utils/token_length_plots.py
-
 Generacion de graficos de longitud (boxplot, ECDF).
 Estilo alineado a visualization_utils.py: seaborn sobre matplotlib,
 guardado con dpi=300 y bbox_inches='tight', firma (df, output_path, title_suffix="").
 
 Las lineas de referencia de "zona de riesgo" usan una etiqueta descriptiva,
-sin IDs de hallazgo (ej. "H04"), porque el rango de tokens que delimitan
+sin IDs de hallazgo internos, porque el rango de tokens que delimitan
 es un valor configurable (TOKEN_LENGTH_RISK_ZONE_TOKENS en text_standards.py)
 que puede cambiar si se rehace el analisis de errores.
 """
@@ -336,7 +334,7 @@ def graficar_riesgo_por_clase(df_riesgo_inferencia: pd.DataFrame, output_path, t
     porcentaje de fragmentos reales de inferencia que caen en la zona de
     riesgo (rango de tokens de menor acierto observado). Es el resumen
     mas directamente accionable de todo el analisis: responde "que clase
-    se beneficiaria mas de una refragmentacion (F02/F03)".
+    se beneficiaria mas de una refragmentacion".
     """
     sns.set_theme(style="white")
 

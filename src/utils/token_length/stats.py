@@ -6,7 +6,7 @@ por clase, y construccion de la tabla comparativa entre fuentes
 (train/val/test/inferencia).
 
 Nombres de columna en español, autoexplicativos (sin abreviaturas tipo
-"p50" ni IDs de hallazgo como "H04"/"H06" — esos umbrales viven en
+"p50" ni IDs de hallazgo internos — esos umbrales viven en
 text_standards.py y pueden cambiar). Cada columna de porcentaje va
 acompañada de su columna de conteo absoluto equivalente.
 """
@@ -166,7 +166,7 @@ def construir_tabla_riesgo_por_clase_inferencia(stats_por_fuente):
     Extrae, solo de la fuente 'inferencia', el porcentaje de fragmentos de
     cada clase que cae en la zona de riesgo (Porcentaje_En_Rango_Riesgo_Tokens),
     ordenado de mayor a menor. Es el numero mas directamente accionable del
-    analisis completo: responde "que clase se beneficiaria mas de F02/F03",
+    analisis completo: responde "que clase se beneficiaria mas de una refragmentacion",
     sin tener que leer la tabla completa o inferirlo del ECDF.
     """
     df = stats_por_fuente.get("inferencia")

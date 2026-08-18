@@ -1,6 +1,4 @@
 """
-src/utils/token_length_io.py
-
 Carga de las distintas fuentes (train/val/test/inferencia), normalización de
 etiquetas y cálculo de longitud (tokens/palabras) por fila.
 
@@ -14,7 +12,7 @@ Reutiliza:
 import pandas as pd
 
 from src.utils.text_utils import normalize_category
-from src.utils.tokenization_utils import contar_tokens, contar_palabras
+from src.utils.token_length.tokenization import contar_tokens, contar_palabras
 
 
 def _registrar_no_reconocidas(df_no_reconocidas, nombre_fuente, columna_etiqueta,

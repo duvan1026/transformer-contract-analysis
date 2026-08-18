@@ -1,0 +1,1 @@
+"""Análisis de longitud de fragmentos (tokens/palabras) por clase y fuente."""

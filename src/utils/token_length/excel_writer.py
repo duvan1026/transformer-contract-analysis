@@ -1,6 +1,4 @@
 """
-src/utils/token_length_excel_writer.py
-
 Escritura y formateo del Excel de salida del análisis de longitud de tokens.
 Responsabilidad separada de token_length_stats.py: aquí solo vive la
 presentación (formato de celdas, anchos de columna, hoja de diccionario),
