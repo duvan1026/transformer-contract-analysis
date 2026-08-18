@@ -29,6 +29,7 @@ generado por el MISMO experimento indicado en --model.
 """
 
 import sys
+import json
 import argparse
 from pathlib import Path
 
@@ -64,6 +65,8 @@ from src.config.paths import (
     TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BALANCED,
     TOKEN_LENGTH_TRUNCATION_RISK_BALANCED,
     TOKEN_LENGTH_RISK_BY_CLASS_BALANCED,
+    RECALL_BY_LENGTH_RISK_ZONE_FILE_BASELINE,
+    RECALL_BY_LENGTH_RISK_ZONE_FILE_BALANCED,
 )
 from src.config.text_standards import (
     MODEL_NAME,
@@ -73,8 +76,8 @@ from src.config.text_standards import (
 )
 from src.config.label_mapping import LABEL2ID_BASELINE, LABEL2ID_BALANCED
 
-from src.utils.token_length_io import cargar_split, cargar_inferencia_ground_truth
-from src.utils.token_length_stats import (
+from src.utils.token_length.io import cargar_split, cargar_inferencia_ground_truth
+from src.utils.token_length.stats import (
     calcular_estadisticos,
     construir_resumen_comparativo,
     construir_tabla_conteos,
@@ -82,8 +85,8 @@ from src.utils.token_length_stats import (
     construir_tabla_riesgo_truncamiento,
     construir_tabla_riesgo_por_clase_inferencia,
 )
-from src.utils.token_length_excel_writer import guardar_excel_estadisticos
-from src.utils.token_length_plots import (
+from src.utils.token_length.excel_writer import guardar_excel_estadisticos
+from src.utils.token_length.plots import (
     graficar_boxplot,
     graficar_ecdf,
     graficar_balance_clases,
@@ -115,9 +118,10 @@ def main(model_type):
         composition_positive_only_path = TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BALANCED
         truncation_risk_path = TOKEN_LENGTH_TRUNCATION_RISK_BALANCED
         risk_by_class_path = TOKEN_LENGTH_RISK_BY_CLASS_BALANCED
+        risk_zone_file_path = RECALL_BY_LENGTH_RISK_ZONE_FILE_BALANCED
     else:
         ground_truth_path = GROUND_TRUTH_BASELINE
-        # Baseline nunca entreno NONE (H01) -> se excluye del set de etiquetas validas
+        # Baseline nunca entreno la clase NONE -> se excluye del set de etiquetas validas
         etiquetas_validas = set(LABEL2ID_BASELINE.keys())
         output_dir = TOKEN_LENGTH_BASELINE_DIR
         stats_path = TOKEN_LENGTH_STATS_BASELINE
@@ -129,8 +133,25 @@ def main(model_type):
         composition_positive_only_path = TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BASELINE
         truncation_risk_path = TOKEN_LENGTH_TRUNCATION_RISK_BASELINE
         risk_by_class_path = TOKEN_LENGTH_RISK_BY_CLASS_BASELINE
+        risk_zone_file_path = RECALL_BY_LENGTH_RISK_ZONE_FILE_BASELINE
 
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1b. Zona de riesgo: usar la calculada por analyze_recall_by_length.py si existe,
+    # o el valor de respaldo de text_standards.py con advertencia si no se ha ejecutado.
+    zona_riesgo_tokens = TOKEN_LENGTH_RISK_ZONE_TOKENS
+    if risk_zone_file_path.exists():
+        with open(risk_zone_file_path, "r", encoding="utf-8") as f:
+            zona_riesgo_calculada = json.load(f)
+        zona_riesgo_tokens = (zona_riesgo_calculada["bin_min"], zona_riesgo_calculada["bin_max"])
+        print(f"Usando zona de riesgo calculada por analyze_recall_by_length.py: "
+              f"{zona_riesgo_tokens[0]}-{zona_riesgo_tokens[1]} tokens "
+              f"(recall {zona_riesgo_calculada['recall']}%, n={zona_riesgo_calculada['n']}).\n")
+    else:
+        print(f"[AVISO] No se encontro {risk_zone_file_path}. Usando el valor de respaldo "
+              f"{zona_riesgo_tokens[0]}-{zona_riesgo_tokens[1]} tokens de text_standards.py. "
+              f"Para una zona de riesgo verificada con datos actuales, ejecuta primero:\n"
+              f"  python src/analysis/analyze_recall_by_length.py --model {model_type}\n")
 
     # 2. Tokenizador (mismo patron que 01_prepare_batch_documents.py: sin checkpoint local)
     print(f"Cargando tokenizador: {MODEL_NAME}")
@@ -177,7 +198,7 @@ def main(model_type):
     for fuente in ["train", "val", "test", "inferencia"]:
         sub = df_todas_fuentes[df_todas_fuentes["fuente"] == fuente]
         stats_por_fuente[fuente] = calcular_estadisticos(
-            sub, TOKEN_LENGTH_WORD_THRESHOLD, TOKEN_LENGTH_RISK_ZONE_TOKENS, MAX_TOKENS
+            sub, TOKEN_LENGTH_WORD_THRESHOLD, zona_riesgo_tokens, MAX_TOKENS
         )
 
     resumen_comparativo = construir_resumen_comparativo(stats_por_fuente)
@@ -187,7 +208,7 @@ def main(model_type):
     guardar_excel_estadisticos(
         stats_por_fuente, resumen_comparativo, stats_path,
         umbral_palabras=TOKEN_LENGTH_WORD_THRESHOLD,
-        zona_riesgo_tokens=TOKEN_LENGTH_RISK_ZONE_TOKENS,
+        zona_riesgo_tokens=zona_riesgo_tokens,
         max_tokens=MAX_TOKENS,
     )
 
@@ -199,7 +220,7 @@ def main(model_type):
     graficar_ecdf(
         df_todas_fuentes, ecdf_path, title_suffix=f"({model_type})",
         umbral_palabras=TOKEN_LENGTH_WORD_THRESHOLD,
-        zona_riesgo_tokens=TOKEN_LENGTH_RISK_ZONE_TOKENS,
+        zona_riesgo_tokens=zona_riesgo_tokens,
     )
 
     # 6b. Balance de clases, composicion relativa y riesgo de truncamiento
