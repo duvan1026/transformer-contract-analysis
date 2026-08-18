@@ -156,3 +156,33 @@ TOKEN_LENGTH_COMPOSITION_WITH_NONE_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "compo
 TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "composicion_relativa_solo_positivas.png"
 TOKEN_LENGTH_TRUNCATION_RISK_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "riesgo_truncamiento.png"
 TOKEN_LENGTH_RISK_BY_CLASS_BALANCED = TOKEN_LENGTH_BALANCED_DIR / "ranking_riesgo_por_clase.png"
+
+
+# ==============================
+# ANÁLISIS DE RECALL POR LONGITUD
+# ==============================
+# Verifica, con el ground truth real, si la zona de menor acierto del
+# modelo sigue vigente, en vez de asumirla como un valor fijo. Se ejecuta ANTES de analyze_token_length.py:
+# su resultado (zona de riesgo calculada) alimenta las gráficas de longitud.
+
+RECALL_BY_LENGTH_DIR = REPORTS_DIR / "recall_by_length_analysis"
+
+# --- CARRIL 1: BASELINE ---
+RECALL_BY_LENGTH_BASELINE_DIR = RECALL_BY_LENGTH_DIR / "baseline"
+RECALL_BY_LENGTH_STATS_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "recall_por_longitud.xlsx"
+RECALL_BY_LENGTH_CHART_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "recall_por_longitud.png"
+# Archivo generado por analyze_recall_by_length.py y leido por analyze_token_length.py
+RECALL_BY_LENGTH_RISK_ZONE_FILE_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "zona_riesgo_calculada.json"
+
+# --- CARRIL 2: BALANCED ---
+RECALL_BY_LENGTH_BALANCED_DIR = RECALL_BY_LENGTH_DIR / "balanced"
+RECALL_BY_LENGTH_STATS_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "recall_por_longitud.xlsx"
+RECALL_BY_LENGTH_CHART_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "recall_por_longitud.png"
+RECALL_BY_LENGTH_RISK_ZONE_FILE_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "zona_riesgo_calculada.json"
+
+# --- Simulacion de impacto: escenario actual vs. objetivo (longitud igualada a train) ---
+IMPACT_SIMULATION_STATS_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "simulacion_impacto.xlsx"
+IMPACT_SIMULATION_CHART_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "simulacion_impacto.png"
+
+IMPACT_SIMULATION_STATS_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "simulacion_impacto.xlsx"
+IMPACT_SIMULATION_CHART_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "simulacion_impacto.png"

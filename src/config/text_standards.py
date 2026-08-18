@@ -89,3 +89,11 @@ TOKEN_LENGTH_WORD_THRESHOLD = 200
 # Rango de tokens (min, max) donde se observó menor acierto del modelo en el análisis de errores.
 # Editable: si el rango de menor acierto cambia (por ejemplo, tras reentrenar), actualizar aquí.
 TOKEN_LENGTH_RISK_ZONE_TOKENS = (400, 600)
+
+# --- Bins para el análisis de recall por longitud ---
+# RECALL_BY_LENGTH_BINS = [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600]
+RECALL_BY_LENGTH_BINS = [0, 50, 100, 150, 250, 400, 600]
+ 
+# Tamaño mínimo de muestra que debe tener un bin para considerarlo confiable
+# al determinar automáticamente la zona de riesgo (bin de menor recall).
+RECALL_BY_LENGTH_MIN_N_BIN = 15
