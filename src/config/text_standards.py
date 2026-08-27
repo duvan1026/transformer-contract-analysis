@@ -97,3 +97,23 @@ RECALL_BY_LENGTH_BINS = [0, 50, 100, 150, 250, 400, 600]
 # Tamaño mínimo de muestra que debe tener un bin para considerarlo confiable
 # al determinar automáticamente la zona de riesgo (bin de menor recall).
 RECALL_BY_LENGTH_MIN_N_BIN = 15
+
+
+# ==============================================================================
+# REBALANCEO DE SPANS/FRAGMENTOS LARGOS (post train/val/test einferencia, ver src/utils/rebalancing/). 
+# ==============================================================================
+
+# Umbral de tokens a partir del cual una unidad (span de train o fragmento
+# de inferencia ya generado) se subdivide. Deliberadamente MENOR que
+# MAX_TOKENS: MAX_TOKENS es el límite físico del modelo;
+FRAGMENT_REBALANCE_THRESHOLD = 250
+
+# Delimitadores de nivel 1 y 2 de la cascada de rebalanceo . Se escala a estos niveles
+# solo cuando una "oración" (según SENTENCE_BOUNDARY_REGEX) por sí sola
+# sigue excediendo FRAGMENT_REBALANCE_THRESHOLD -- confirmado con datos
+# reales que esto ocurre en cláusulas jurídicas enumeradas del tipo
+# "(i)...; (ii)...; (iii)...;" (nivel 1) o "(a)..., (b)..., (c)...," (nivel 2),
+# que no contienen puntos y por tanto el regex de oración las trata como
+# una sola unidad indivisible.
+CLAUSE_BOUNDARY_SEMICOLON_REGEX = r'[^;]+;?'
+CLAUSE_BOUNDARY_COMMA_REGEX = r'[^,]+,?'

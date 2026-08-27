@@ -189,3 +189,24 @@ IMPACT_SIMULATION_CHART_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "simulacion_i
 
 ANNOTATION_REGISTRY_BASELINE = INFERENCE_BASELINE_DIR / "annotation_registry.csv"
 ANNOTATION_REGISTRY_BALANCED = INFERENCE_BALANCED_DIR / "annotation_registry.csv"
+
+# ==============================================================================
+# REBALANCEO DE SPANS/FRAGMENTOS LARGOS
+# ==============================================================================
+
+REBALANCING_REPORTS_DIR = REPORTS_DIR / "rebalancing"
+
+# --- Train/val/test (un único CSV de rechazos y un único reporte que
+# cubre los tres splits, con columna/sección "split", igual que ya hace
+# SPLIT_REPORT_FILE con train/val/test combinados) ---
+REBALANCE_REJECTED_TRAIN = PROCESSED_DATA_DIR / "rebalance_rejected_train_val_test.csv"
+REBALANCE_REPORT_TRAIN = REBALANCING_REPORTS_DIR / "rebalance_train_val_test_report.txt"
+
+# --- Inferencia: un archivo de rechazos y un reporte por carril,
+# consistente con el resto de artefactos de inferencia (aislados por
+# experimento en INFERENCE_BASELINE_DIR / INFERENCE_BALANCED_DIR) ---
+REBALANCE_REJECTED_INFERENCE_BASELINE = INFERENCE_BASELINE_DIR / "rebalance_rejected_fragments.csv"
+REBALANCE_REPORT_INFERENCE_BASELINE = REBALANCING_REPORTS_DIR / "baseline_report.txt"
+
+REBALANCE_REJECTED_INFERENCE_BALANCED = INFERENCE_BALANCED_DIR / "rebalance_rejected_fragments.csv"
+REBALANCE_REPORT_INFERENCE_BALANCED = REBALANCING_REPORTS_DIR / "balanced_report.txt"

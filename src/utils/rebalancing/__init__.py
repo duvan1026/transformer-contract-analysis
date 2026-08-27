@@ -1,0 +1,1 @@
+"""Rebalanceo de spans/fragmentos largos: divide unidades que exceden un umbral de tokens en piezas balanceadas, escalando por niveles de delimitador (oración -> clausula por punto y coma -> clausula por coma) solo cuando el nivel actual no logra reducir una pieza por debajo del umbral."""

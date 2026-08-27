@@ -64,6 +64,7 @@ run_step "[1/4] Aplicar Mapeo de Categorías" python src/preprocessing/apply_cat
 if [ "$EXPERIMENT" == "baseline" ]; then
     run_step "[2/4] Validar Dataset" python src/preprocessing/validate_dataset.py
     run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_density.py
+    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/rebalance_long_spans.py
     run_step "[2/4] Entrenar BERT Baseline" python src/training/train_bert_baseline.py
     
 elif [ "$EXPERIMENT" == "balanced" ]; then
@@ -71,6 +72,7 @@ elif [ "$EXPERIMENT" == "balanced" ]; then
     run_step "[2/4] Generar Clase NONE" python src/preprocessing/inject_none_class.py
     run_step "[2/4] Validar Dataset" python src/preprocessing/validate_dataset.py
     run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_stratified.py
+    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/rebalance_long_spans.py  
     run_step "[2/4] Entrenar BERT Balanced" python src/training/train_bert_balanced.py
 fi
 
@@ -80,6 +82,7 @@ run_step "[3/4] Evaluando Modelo (Test)" python src/evaluation/evaluate_test.py 
 
 run_step "[4/4] Inicializar Registro Maestro" python src/data/00_init_master_registry.py --model "$EXPERIMENT"
 run_step "[4/4] Preparar Lote de Documentos" python src/inference/01_prepare_batch_documents.py --model "$EXPERIMENT"
+run_step "[4/4] Preparar Lote de Documentos" python src/inference/01b_rebalance_fragments.py --model "$EXPERIMENT"
 run_step "[4/4] Inferencia Pura (Softmax)" python src/inference/02_run_inference.py --model "$EXPERIMENT"
 run_step "[4/4] Calcular Ground Truth Espacial" python src/inference/03_calculate_ground_truth.py --model "$EXPERIMENT"
 run_step "[4/4] Generar Reportes y JSONs" python src/inference/04_generate_reports.py --model "$EXPERIMENT"
