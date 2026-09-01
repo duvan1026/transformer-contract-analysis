@@ -3,27 +3,43 @@ src/utils/rebalancing/splitting.py
 
 Núcleo puro del rebalanceo de unidades de texto largas (spans de train o
 fragmentos de inferencia). No depende de pandas ni de rutas de disco: opera
-sobre (texto, offset_absoluto_de_inicio, tokenizer, umbral) y devuelve una
-lista de piezas con sus offsets absolutos recalculados.
+sobre (texto, offset_absoluto_de_inicio, tokenizer, objetivo, límite físico)
+y devuelve una lista de piezas con sus offsets absolutos recalculados.
 
-Estrategia (cascada de niveles, confirmada con datos reales de
-ground_truth_results.csv — ver Analisis_A1_A2_A3_Ground_Truth_Circularity.md
-y el análisis de longitud de este TFM):
+Distinción central de este módulo entre dos umbrales, que antes eran uno solo:
 
-  Nivel 0 (oración):       SENTENCE_BOUNDARY_REGEX (.!?\n)
-  Nivel 1 (cláusula ';'):  CLAUSE_BOUNDARY_SEMICOLON_REGEX
-  Nivel 2 (cláusula ','):  CLAUSE_BOUNDARY_COMMA_REGEX
+  - OBJETIVO (target_tokens, 250): decide EN CUÁNTOS grupos se reparte una
+    unidad y qué tan parejos quedan esos grupos. Es un número de referencia
+    para el reparto, no una prohibición: un grupo que queda un poco por
+    encima del objetivo se acepta sin problema.
 
-Una unidad solo escala al siguiente nivel cuando, tras agotar el nivel
-actual, queda una pieza irreducible (una única unidad atómica de ese nivel)
-que por sí sola sigue excediendo el umbral. Esto mantiene la intervención
-acotada al residuo problemático, no al corpus completo.
+  - LÍMITE FÍSICO (max_tokens, 512): el único motivo real para forzar una
+    división. Solo cuando una pieza irreducible (una unidad que ningún
+    delimitador logra partir más) supera este número se escala al siguiente
+    nivel de la cascada. Antes, un único umbral cumplía ambos roles, lo que
+    forzaba a dividir bloques de texto perfectamente seguros para el modelo
+    solo por estar un poco por encima del objetivo.
 
-Si una unidad agota los 3 niveles y sigue sin poder dividirse (sin ';' ni
-','), se deja tal cual, marcada con metodo_division="sin_dividir_sin_delimitador".
-No hay corte mecánico de último recurso (decisión explícita: estos casos son
-raros -1 en 11.044 fragmentos verificados- y se tratan como excepción
-documentada, no forzada).
+Estrategia (cascada de 2 niveles, la anterior tenía 3):
+
+  Nivel 0 (oración):      SENTENCE_BOUNDARY_REGEX (.!?\n)
+  Nivel 1 (cláusula ';'): CLAUSE_BOUNDARY_SEMICOLON_REGEX
+
+Se escala de un nivel al siguiente únicamente cuando, dentro del nivel
+actual, aparece una unidad irreducible (no hay más de una coincidencia del
+delimitador) que por sí sola supera el límite físico. Si esa unidad está
+por debajo del límite físico -aunque supere el objetivo-, se acepta tal
+cual: no hay ninguna razón para forzar un corte adicional.
+
+Se retiró el nivel de comas que existía antes. Con la distinción
+objetivo/límite físico, ese nivel casi nunca llegaba a activarse, y cuando
+lo hacía, el riesgo de partir una referencia cruzada o un término legal a la
+mitad superaba el beneficio de acercarse más al objetivo.
+
+Si una unidad llega al final de la cascada (agotó oración y ';') y sigue sin
+poder dividirse porque no tiene ningún delimitador disponible, se deja tal
+cual, marcada con metodo_division="sin_dividir_sin_delimitador". No hay
+corte mecánico de último recurso: es una excepción documentada, no forzada.
 """
 
 import re
@@ -32,14 +48,12 @@ from dataclasses import dataclass
 from src.config.text_standards import (
     SENTENCE_BOUNDARY_REGEX,
     CLAUSE_BOUNDARY_SEMICOLON_REGEX,
-    CLAUSE_BOUNDARY_COMMA_REGEX,
 )
 
 # Nombre de nivel -> regex. Orden = orden de escalado.
 _NIVELES_CASCADA = [
     ("oracion", SENTENCE_BOUNDARY_REGEX),
     ("clausula_punto_y_coma", CLAUSE_BOUNDARY_SEMICOLON_REGEX),
-    ("clausula_coma", CLAUSE_BOUNDARY_COMMA_REGEX),
 ]
 
 _METODO_SIN_DIVIDIR = "sin_dividir"
@@ -55,10 +69,13 @@ class _UnidadAtomica:
     tokens: int
 
 
-def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer, umbral: int) -> list[dict]:
+def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
+                        target_tokens: int, max_tokens: int) -> list[dict]:
     """
-    Punto de entrada público. Divide `texto` en piezas <= `umbral` tokens
-    cuando es posible, preservando offsets absolutos.
+    Punto de entrada público. Divide `texto` en piezas equilibradas cuando
+    excede `target_tokens`, preservando offsets absolutos, y garantiza que
+    ninguna pieza final supere `max_tokens` salvo el caso documentado de
+    "sin_dividir_sin_delimitador".
 
     Parámetros
     ----------
@@ -69,8 +86,12 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer, umbral: int) -
         Offset absoluto (dentro del documento original) donde empieza `texto`.
     tokenizer : AutoTokenizer
         Mismo tokenizer usado en el resto del pipeline (bert-base-uncased).
-    umbral : int
-        FRAGMENT_REBALANCE_THRESHOLD.
+    target_tokens : int
+        FRAGMENT_REBALANCE_TARGET_TOKENS. Decide si se intenta repartir y en
+        cuántos grupos.
+    max_tokens : int
+        FRAGMENT_REBALANCE_MAX_TOKENS. Único motivo real para forzar un
+        corte adicional dentro de la cascada.
 
     Retorna
     -------
@@ -83,12 +104,12 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer, umbral: int) -
                 "tokens": int,
                 "metodo_division": str,
             }
-        Si `texto` ya cabe en `umbral`, devuelve una lista de 1 elemento
-        con metodo_division="sin_dividir".
+        Si `texto` ya cabe en `target_tokens`, devuelve una lista de 1
+        elemento con metodo_division="sin_dividir".
     """
     tokens_totales = _contar_tokens(texto, tokenizer)
 
-    if tokens_totales <= umbral:
+    if tokens_totales <= target_tokens:
         return [{
             "texto": texto,
             "start_offset": offset_inicio,
@@ -97,7 +118,7 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer, umbral: int) -
             "metodo_division": _METODO_SIN_DIVIDIR,
         }]
 
-    piezas = _procesar_nivel(texto, offset_inicio, tokenizer, umbral, nivel_idx=0)
+    piezas = _procesar_nivel(texto, offset_inicio, tokenizer, target_tokens, max_tokens, nivel_idx=0)
     return [
         {
             "texto": p.texto,
@@ -119,15 +140,13 @@ def _extraer_unidades_atomicas(texto: str, offset_base: int, tokenizer, regex: s
     Aplica `regex` sobre `texto` y devuelve las unidades resultantes con
     offset absoluto (offset_base + posición relativa) y tokens ya contados.
 
-    IMPORTANTE: nunca descarta una coincidencia, aunque sea solo espacio en
-    blanco (ej. el espacio entre el punto final de una oración y el inicio
-    de la siguiente). Descartar esas coincidencias -como hace el filtro de
-    calidad al validar fragmentos finales- rompería aquí la invariante de
-    que la concatenación de unidades debe reconstruir el texto original
-    byte a byte, y con ello desalinearía los offsets absolutos usados
-    después para el cruce espacial contra las anotaciones de CUAD. Una
-    coincidencia vacía tras strip() se fusiona con la unidad anterior en
-    vez de crear una unidad nueva sin contenido útil.
+    Nunca descarta una coincidencia, aunque sea solo espacio en blanco (ej.
+    el espacio entre el punto final de una oración y el inicio de la
+    siguiente): descartarla rompería la invariante de que la concatenación
+    de unidades reconstruye el texto original byte a byte, desalineando los
+    offsets absolutos usados después para el cruce espacial contra las
+    anotaciones. Una coincidencia vacía tras strip() se fusiona con la
+    unidad anterior en vez de crear una unidad nueva sin contenido útil.
     """
     unidades: list[_UnidadAtomica] = []
     for match in re.finditer(regex, texto):
@@ -149,29 +168,28 @@ def _extraer_unidades_atomicas(texto: str, offset_base: int, tokenizer, regex: s
     return unidades
 
 
-def _agrupar_balanceado(unidades: list[_UnidadAtomica], umbral: int) -> list[list[_UnidadAtomica]]:
+def _agrupar_balanceado(unidades: list[_UnidadAtomica], target_tokens: int) -> list[list[_UnidadAtomica]]:
     """
-    Agrupa unidades atómicas consecutivas en k=ceil(total_tokens/umbral)
+    Agrupa unidades atómicas consecutivas en k=ceil(total_tokens/target_tokens)
     grupos, recalculando el objetivo por grupo tras cerrar cada uno:
         objetivo_actual = tokens_restantes / grupos_restantes
 
-    A diferencia del algoritmo greedy actual (_split_long_paragraph_deterministically
-    en fragmentation_utils.py, que llena hasta el tope y dejar el resto en
-    el último chunk), este reparto se mantiene uniforme sin importar cuántas
-    unidades atómicas haya.
+    Reparto uniforme sin importar cuántas unidades atómicas haya, en vez de
+    llenar cada grupo hasta el tope y dejar el resto en el último.
 
-    Una unidad atómica individual con tokens > umbral se aísla como grupo
-    de tamaño 1 (no se combina con nada) — queda marcada para escalar al
-    siguiente nivel de la cascada por el llamador.
+    Una unidad atómica individual con tokens mayores al objetivo se agrupa
+    igual con lo que haya alrededor -- que un grupo quede algo por encima
+    del objetivo no es un problema: solo importa si termina superando el
+    límite físico, y eso se decide después, en _procesar_nivel.
 
     Garantiza devolver exactamente len(unidades) unidades distribuidas
     (ninguna se pierde ni se duplica).
     """
     total_tokens = sum(u.tokens for u in unidades)
-    if total_tokens <= umbral:
+    if total_tokens <= target_tokens:
         return [list(unidades)]
 
-    k = -(-total_tokens // umbral)  # ceil sin importar math.ceil
+    k = -(-total_tokens // target_tokens)  # ceil sin importar math.ceil
     pendientes = list(unidades)
     grupos: list[list[_UnidadAtomica]] = []
     tokens_restantes = total_tokens
@@ -219,14 +237,16 @@ def _fusionar_grupo(grupo: list[_UnidadAtomica]) -> _UnidadAtomica:
 
 
 def _procesar_nivel(
-    texto: str, offset_inicio: int, tokenizer, umbral: int, nivel_idx: int
+    texto: str, offset_inicio: int, tokenizer, target_tokens: int, max_tokens: int, nivel_idx: int
 ) -> list[tuple[_UnidadAtomica, str]]:
     """
-    Procesa `texto` (que ya se sabe que excede `umbral`) en el nivel
+    Procesa `texto` (que ya se sabe que excede target_tokens) en el nivel
     `nivel_idx` de la cascada. Devuelve lista de (pieza, metodo_division).
     """
     if nivel_idx >= len(_NIVELES_CASCADA):
-        # Agotados los 3 niveles: no hay delimitador que permita dividir más.
+        # Agotados los niveles disponibles: no hay delimitador que permita
+        # dividir más. Solo se llega aquí si la unidad ya supera max_tokens
+        # (ver más abajo), así que queda marcada como excepción documentada.
         unidad = _UnidadAtomica(
             texto=texto, start=offset_inicio, end=offset_inicio + len(texto),
             tokens=_contar_tokens(texto, tokenizer),
@@ -237,34 +257,48 @@ def _procesar_nivel(
     unidades = _extraer_unidades_atomicas(texto, offset_inicio, tokenizer, regex_nivel)
 
     if len(unidades) <= 1:
-        # El delimitador de este nivel no partió nada (0 o 1 coincidencias)
-        # -> escalar directamente al siguiente nivel sobre el mismo texto.
-        return _procesar_nivel(texto, offset_inicio, tokenizer, umbral, nivel_idx + 1)
+        # El delimitador de este nivel no partió nada (0 o 1 coincidencias).
+        tokens_unidad = unidades[0].tokens if unidades else _contar_tokens(texto, tokenizer)
+        if tokens_unidad <= max_tokens:
+            # Supera el objetivo, pero no hay ningún punto de corte natural
+            # y está dentro del límite físico real: se acepta tal cual, sin
+            # forzar ningún corte adicional.
+            unidad = unidades[0] if unidades else _UnidadAtomica(
+                texto=texto, start=offset_inicio, end=offset_inicio + len(texto), tokens=tokens_unidad,
+            )
+            return [(unidad, _METODO_SIN_DIVIDIR)]
+        # Supera el límite físico real: sí hace falta buscar un delimitador
+        # más fino, escalar al siguiente nivel sobre el mismo texto.
+        return _procesar_nivel(texto, offset_inicio, tokenizer, target_tokens, max_tokens, nivel_idx + 1)
 
-    grupos = _agrupar_balanceado(unidades, umbral)
+    grupos = _agrupar_balanceado(unidades, target_tokens)
 
     resultado: list[tuple[_UnidadAtomica, str]] = []
     for grupo in grupos:
         pieza = _fusionar_grupo(grupo)
-        if pieza.tokens <= umbral:
+        if pieza.tokens <= max_tokens:
+            # El grupo puede quedar algo por encima del objetivo -- se
+            # acepta igual, porque el único motivo real para seguir
+            # dividiendo es superar el límite físico, no el objetivo.
             resultado.append((pieza, nombre_nivel))
         elif len(grupo) == 1:
-            # Unidad irreducible en este nivel: escalar solo esta unidad.
-            resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, umbral, nivel_idx + 1))
+            # Unidad irreducible en este nivel que además supera el límite
+            # físico: escalar solo esta unidad.
+            resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
         else:
-            # Grupo multi-unidad que igual excede el umbral (desbalance
+            # Grupo multi-unidad que aún supera el límite físico (desbalance
             # residual del reparto): se re-intenta balancear ESTE grupo
             # entre sus propias unidades, sin escalar de nivel todavía.
-            subgrupos = _agrupar_balanceado(grupo, umbral)
+            subgrupos = _agrupar_balanceado(grupo, target_tokens)
             if len(subgrupos) == 1 and len(subgrupos[0]) == len(grupo):
                 # No se pudo mejorar (mismo agrupamiento) -> escalar para evitar bucle infinito.
-                resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, umbral, nivel_idx + 1))
+                resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
             else:
                 for subgrupo in subgrupos:
                     subpieza = _fusionar_grupo(subgrupo)
-                    if subpieza.tokens <= umbral:
+                    if subpieza.tokens <= max_tokens:
                         resultado.append((subpieza, nombre_nivel))
                     else:
-                        resultado.extend(_procesar_nivel(subpieza.texto, subpieza.start, tokenizer, umbral, nivel_idx + 1))
+                        resultado.extend(_procesar_nivel(subpieza.texto, subpieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
 
     return resultado
