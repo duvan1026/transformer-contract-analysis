@@ -100,20 +100,38 @@ RECALL_BY_LENGTH_MIN_N_BIN = 15
 
 
 # ==============================================================================
-# REBALANCEO DE SPANS/FRAGMENTOS LARGOS (post train/val/test einferencia, ver src/utils/rebalancing/). 
+# REBALANCEO DE SPANS/FRAGMENTOS LARGOS (post train/val/test e inferencia, ver src/utils/rebalancing/).
 # ==============================================================================
 
-# Umbral de tokens a partir del cual una unidad (span de train o fragmento
-# de inferencia ya generado) se subdivide. Deliberadamente MENOR que
-# MAX_TOKENS: MAX_TOKENS es el límite físico del modelo;
-FRAGMENT_REBALANCE_THRESHOLD = 250
-
-# Delimitadores de nivel 1 y 2 de la cascada de rebalanceo . Se escala a estos niveles
-# solo cuando una "oración" (según SENTENCE_BOUNDARY_REGEX) por sí sola
-# sigue excediendo FRAGMENT_REBALANCE_THRESHOLD -- confirmado con datos
-# reales que esto ocurre en cláusulas jurídicas enumeradas del tipo
-# "(i)...; (ii)...; (iii)...;" (nivel 1) o "(a)..., (b)..., (c)...," (nivel 2),
-# que no contienen puntos y por tanto el regex de oración las trata como
-# una sola unidad indivisible.
+# Objetivo de reparto (umbral blando): decide en cuántos grupos se divide
+# una unidad y qué tan parejos quedan esos grupos entre sí. Una unidad por
+# encima de este número NO se corta automáticamente -- solo se corta si,
+# además, alguna de sus partes irreducibles supera FRAGMENT_REBALANCE_MAX_TOKENS.
+FRAGMENT_REBALANCE_TARGET_TOKENS = 250
+ 
+# Límite físico real: el máximo de tokens que el modelo puede procesar sin
+# truncar. Antes, un solo número (250) cumplía a la vez el rol de objetivo y
+# el de límite físico, lo que forzaba divisiones innecesarias en unidades
+# perfectamente seguras para el modelo (por ejemplo, un bloque de 320 tokens
+# sin puntos de corte naturales no necesita dividirse: está muy por debajo
+# de este límite).
+FRAGMENT_REBALANCE_MAX_TOKENS = 512
+ 
+# Si es False (valor por defecto), las categorías positivas (todo lo que no
+# sea "NONE") nunca se dividen en el rebalanceo de entrenamiento -- se dejan
+# exactamente como las extrajo extract_spans.py desde CUAD. Dividir un span
+# ya etiquetado arriesga que el trozo resultante ya no contenga el elemento
+# que justifica esa etiqueta (por ejemplo, el verbo de prohibición de una
+# cláusula de no competencia puede quedar en un trozo y la enumeración de
+# casos en otro, sin ese verbo). Cambiar a True revierte al comportamiento
+# anterior (todas las filas se dividen por igual, sin distinguir categoría).
+REBALANCE_INCLUDE_POSITIVE_CATEGORIES = False
+ 
+# Delimitador de la única cláusula de respaldo, usada solo cuando una
+# oración completa, por sí sola, ya supera FRAGMENT_REBALANCE_MAX_TOKENS y
+# no hay ningún punto, signo de exclamación o interrogación dentro de ella
+# para dividirla. Se retiró el nivel adicional que buscaba comas: cortar por
+# coma aumenta el riesgo de partir una referencia cruzada o un término legal
+# a la mitad, y con la distinción objetivo/límite físico de arriba, este
+# nivel de respaldo ya casi nunca hace falta.
 CLAUSE_BOUNDARY_SEMICOLON_REGEX = r'[^;]+;?'
-CLAUSE_BOUNDARY_COMMA_REGEX = r'[^,]+,?'
