@@ -66,7 +66,7 @@ def main(model_type):
     print(f"[*] Fragmentos cargados: {n_antes}")
 
     df_resultado, df_rechazadas = rebalancear_fragmentos_inferencia(
-        df_fragmentos, tokenizer, FRAGMENT_REBALANCE_TARGET_TOKENS, FRAGMENT_REBALANCE_MAX_TOKENS
+        df_fragmentos, tokenizer, FRAGMENT_REBALANCE_MAX_TOKENS, FRAGMENT_REBALANCE_TARGET_TOKENS
     )
 
     df_resultado.to_csv(fragments_path, index=False, encoding="utf-8")

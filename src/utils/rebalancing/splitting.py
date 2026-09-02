@@ -70,7 +70,7 @@ class _UnidadAtomica:
 
 
 def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
-                        target_tokens: int, max_tokens: int) -> list[dict]:
+                        max_tokens: int, umbral_objetivo: int) -> list[dict]:
     """
     Punto de entrada público. Divide `texto` en piezas equilibradas cuando
     excede `target_tokens`, preservando offsets absolutos, y garantiza que
@@ -109,7 +109,7 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
     """
     tokens_totales = _contar_tokens(texto, tokenizer)
 
-    if tokens_totales <= target_tokens:
+    if tokens_totales <= max_tokens:
         return [{
             "texto": texto,
             "start_offset": offset_inicio,
@@ -118,7 +118,7 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
             "metodo_division": _METODO_SIN_DIVIDIR,
         }]
 
-    piezas = _procesar_nivel(texto, offset_inicio, tokenizer, target_tokens, max_tokens, nivel_idx=0)
+    piezas = _procesar_nivel(texto, offset_inicio, tokenizer, max_tokens, umbral_objetivo, nivel_idx=0)
     return [
         {
             "texto": p.texto,
@@ -237,7 +237,7 @@ def _fusionar_grupo(grupo: list[_UnidadAtomica]) -> _UnidadAtomica:
 
 
 def _procesar_nivel(
-    texto: str, offset_inicio: int, tokenizer, target_tokens: int, max_tokens: int, nivel_idx: int
+    texto: str, offset_inicio: int, tokenizer, max_tokens: int, umbral_objetivo: int, nivel_idx: int
 ) -> list[tuple[_UnidadAtomica, str]]:
     """
     Procesa `texto` (que ya se sabe que excede target_tokens) en el nivel
@@ -257,48 +257,31 @@ def _procesar_nivel(
     unidades = _extraer_unidades_atomicas(texto, offset_inicio, tokenizer, regex_nivel)
 
     if len(unidades) <= 1:
-        # El delimitador de este nivel no partió nada (0 o 1 coincidencias).
-        tokens_unidad = unidades[0].tokens if unidades else _contar_tokens(texto, tokenizer)
-        if tokens_unidad <= max_tokens:
-            # Supera el objetivo, pero no hay ningún punto de corte natural
-            # y está dentro del límite físico real: se acepta tal cual, sin
-            # forzar ningún corte adicional.
-            unidad = unidades[0] if unidades else _UnidadAtomica(
-                texto=texto, start=offset_inicio, end=offset_inicio + len(texto), tokens=tokens_unidad,
-            )
-            return [(unidad, _METODO_SIN_DIVIDIR)]
-        # Supera el límite físico real: sí hace falta buscar un delimitador
-        # más fino, escalar al siguiente nivel sobre el mismo texto.
-        return _procesar_nivel(texto, offset_inicio, tokenizer, target_tokens, max_tokens, nivel_idx + 1)
+        return _procesar_nivel(texto, offset_inicio, tokenizer, max_tokens, umbral_objetivo, nivel_idx + 1)
 
-    grupos = _agrupar_balanceado(unidades, target_tokens)
+    grupos = _agrupar_balanceado(unidades, umbral_objetivo)
 
     resultado: list[tuple[_UnidadAtomica, str]] = []
     for grupo in grupos:
         pieza = _fusionar_grupo(grupo)
         if pieza.tokens <= max_tokens:
-            # El grupo puede quedar algo por encima del objetivo -- se
-            # acepta igual, porque el único motivo real para seguir
-            # dividiendo es superar el límite físico, no el objetivo.
             resultado.append((pieza, nombre_nivel))
+
         elif len(grupo) == 1:
-            # Unidad irreducible en este nivel que además supera el límite
-            # físico: escalar solo esta unidad.
-            resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
+            resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, max_tokens, umbral_objetivo, nivel_idx + 1))
+
         else:
-            # Grupo multi-unidad que aún supera el límite físico (desbalance
-            # residual del reparto): se re-intenta balancear ESTE grupo
-            # entre sus propias unidades, sin escalar de nivel todavía.
-            subgrupos = _agrupar_balanceado(grupo, target_tokens)
+            subgrupos = _agrupar_balanceado(grupo, umbral_objetivo)
             if len(subgrupos) == 1 and len(subgrupos[0]) == len(grupo):
                 # No se pudo mejorar (mismo agrupamiento) -> escalar para evitar bucle infinito.
-                resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
+                resultado.extend(_procesar_nivel(pieza.texto, pieza.start, tokenizer, max_tokens, umbral_objetivo, nivel_idx + 1))
+
             else:
                 for subgrupo in subgrupos:
                     subpieza = _fusionar_grupo(subgrupo)
                     if subpieza.tokens <= max_tokens:
                         resultado.append((subpieza, nombre_nivel))
                     else:
-                        resultado.extend(_procesar_nivel(subpieza.texto, subpieza.start, tokenizer, target_tokens, max_tokens, nivel_idx + 1))
+                        resultado.extend(_procesar_nivel(subpieza.texto, subpieza.start, tokenizer, max_tokens, umbral_objetivo, nivel_idx + 1))
 
     return resultado

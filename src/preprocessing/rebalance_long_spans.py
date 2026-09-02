@@ -66,7 +66,7 @@ def run():
         n_antes = len(df_split)
 
         df_resultado, df_rechazadas = rebalancear_split_train(
-            df_split, tokenizer, FRAGMENT_REBALANCE_TARGET_TOKENS, FRAGMENT_REBALANCE_MAX_TOKENS
+            df_split, tokenizer, FRAGMENT_REBALANCE_MAX_TOKENS, FRAGMENT_REBALANCE_TARGET_TOKENS
         )
 
         df_resultado.to_csv(ruta, index=False, encoding="utf-8")

@@ -30,41 +30,8 @@ from src.config.text_standards import (
 _METODO_SIN_DIVIDIR = "sin_dividir"
 
 
-def rebalancear_split_train(df_split: pd.DataFrame, tokenizer,
-                             target_tokens: int = FRAGMENT_REBALANCE_TARGET_TOKENS,
-                             max_tokens: int = FRAGMENT_REBALANCE_MAX_TOKENS) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Aplica el rebalanceo a un split de train/val/test (mismo esquema en los
-    tres: id_documento, categoria, span_text, offset, categoria_original).
+def rebalancear_split_train(df_split: pd.DataFrame, tokenizer, max_tokens, umbral_objetivo) -> tuple[pd.DataFrame, pd.DataFrame]:
 
-    Si REBALANCE_INCLUDE_POSITIVE_CATEGORIES es False (valor por defecto),
-    las filas cuya categoria no sea "NONE" pasan intactas, sin pasar por
-    rebalancear_unidad -- se dejan exactamente como las extrajo
-    extract_spans.py desde CUAD. Dividir un span ya etiquetado arriesga que
-    el trozo resultante ya no contenga el elemento que justifica esa
-    etiqueta (ver text_standards.py para el detalle de este riesgo).
-
-    Añade a cada fila resultante:
-        - unidad_original_id: posición (1-indexada) de la fila padre dentro
-          de este split. Agrupa las piezas que provienen de un mismo span
-          original.
-        - subspan_id: 1..k dentro de esa unidad_original_id.
-        - metodo_division: nivel de la cascada que produjo la pieza
-          ("sin_dividir", "oracion", "clausula_punto_y_coma",
-          "sin_dividir_sin_delimitador").
-        - tokens_estimados: conteo de tokens de la pieza final.
-
-    Las filas excluidas por categoría reciben metodo_division="sin_dividir"
-    igual que una fila que ya cabía en el objetivo, para que la auditoría
-    posterior no las distinga de un caso "no necesitaba dividirse" -- el
-    resultado final (fila intacta) es el mismo, solo cambia el motivo.
-
-    Retorna
-    -------
-    (df_resultado, df_rechazadas)
-        df_rechazadas puede venir vacío si ninguna pieza nueva fue
-        rechazada por el filtro de calidad.
-    """
     filas_resultado = []
     filas_rechazadas = []
 
@@ -88,7 +55,7 @@ def rebalancear_split_train(df_split: pd.DataFrame, tokenizer,
             filas_resultado.append(fila_out)
             continue
 
-        piezas = rebalancear_unidad(texto, int(offset_val), tokenizer, target_tokens, max_tokens)
+        piezas = rebalancear_unidad(texto, int(offset_val), tokenizer, max_tokens, umbral_objetivo)
         se_dividio = len(piezas) > 1
 
         for subspan_id, pieza in enumerate(piezas, start=1):
@@ -111,6 +78,7 @@ def rebalancear_split_train(df_split: pd.DataFrame, tokenizer,
             fila_out.update({
                 "span_text": pieza["texto"],
                 "offset": pieza["start_offset"],
+                "offset_end": pieza["end_offset"],
                 "unidad_original_id": unidad_original_id,
                 "subspan_id": subspan_id,
                 "metodo_division": pieza["metodo_division"],
@@ -121,26 +89,8 @@ def rebalancear_split_train(df_split: pd.DataFrame, tokenizer,
     return pd.DataFrame(filas_resultado), pd.DataFrame(filas_rechazadas)
 
 
-def rebalancear_fragmentos_inferencia(df_fragmentos: pd.DataFrame, tokenizer,
-                                       target_tokens: int = FRAGMENT_REBALANCE_TARGET_TOKENS,
-                                       max_tokens: int = FRAGMENT_REBALANCE_MAX_TOKENS) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Aplica el rebalanceo a batch_fragments.csv (id_documento, parrafo_id,
-    fragmento_id, start_offset, end_offset, contenido, tokens_estimados).
+def rebalancear_fragmentos_inferencia(df_fragmentos: pd.DataFrame, tokenizer,  max_tokens, umbral_objetivo) -> tuple[pd.DataFrame, pd.DataFrame]:
 
-    No distingue por categoría -- en este punto del pipeline los fragmentos
-    todavía no tienen ninguna etiqueta: se calcula después, por
-    solapamiento espacial, en 03_calculate_ground_truth.py.
-
-    `parrafo_id` y `fragmento_id` ya existen y se conservan sin renumerar.
-    Se añade únicamente:
-        - subfragmento_id: 1..k dentro de ese (parrafo_id, fragmento_id).
-        - metodo_division.
-
-    Retorna
-    -------
-    (df_resultado, df_rechazadas)
-    """
     filas_resultado = []
     filas_rechazadas = []
 
@@ -157,7 +107,7 @@ def rebalancear_fragmentos_inferencia(df_fragmentos: pd.DataFrame, tokenizer,
             filas_resultado.append(fila_out)
             continue
 
-        piezas = rebalancear_unidad(texto, int(start_offset), tokenizer, target_tokens, max_tokens)
+        piezas = rebalancear_unidad(texto, int(start_offset), tokenizer, max_tokens, umbral_objetivo)
         se_dividio = len(piezas) > 1
 
         for subfragmento_id, pieza in enumerate(piezas, start=1):
