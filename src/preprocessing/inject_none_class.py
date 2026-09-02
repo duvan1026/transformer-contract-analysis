@@ -44,6 +44,9 @@ def run():
     columnas_existentes = [col for col in columnas_requeridas if col in df_master_none.columns]
     df_master_none = df_master_none[columnas_existentes]
 
+    # offset_end de los spans NONE 
+    df_master_none["offset_end"] = df_master_none["offset"] + df_master_none["span_text"].str.len()
+
     # 3. Lógica de balanceo local por documento (Optimizado con Pandas)
     muestras_none_balanceadas = []
     

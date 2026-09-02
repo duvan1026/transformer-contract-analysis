@@ -24,12 +24,16 @@ def fragment_single_document(document_id, raw_text, tokenizer, max_tokens=MAX_TO
     # 1. Separación primaria: Buscar bloques de texto separados por líneas en blanco (\n\n)
     # Esta expresión regular atrapa párrafos completos respetando sus offsets
     for match in re.finditer(PARAGRAPH_DELIMITER, raw_text):
-        para_text = match.group(1).strip()
+        raw_para = match.group(1)
+        para_text = raw_para.strip()
         if not para_text:
             continue
             
-        para_start = match.start(1)
-        para_end = match.end(1)
+        # Localización directa: dónde empieza para_text dentro de raw_para.
+        local_offset = raw_para.index(para_text)
+
+        para_start = match.start(1) + local_offset
+        para_end = para_start + len(para_text)
         
         # Medimos el párrafo con el tokenizador
         tokens = tokenizer.encode(para_text, add_special_tokens=False)
@@ -125,11 +129,11 @@ def _split_long_paragraph_deterministically(text, start_offset, tokenizer, max_t
         else:
             # Cerramos el chunk actual antes de que desborde
             if current_text.strip():
-                chunks.append((
-                    current_text.strip(), 
-                    current_start, 
-                    current_start + len(current_text)
-                ))
+                stripped = current_text.strip()
+                local_offset = current_text.index(stripped)
+                chunk_start = current_start + local_offset
+                chunk_end = chunk_start + len(stripped)
+                chunks.append((stripped, chunk_start, chunk_end))
             
             # Iniciamos el siguiente chunk con la oración actual
             current_text = sentence_text
@@ -137,10 +141,10 @@ def _split_long_paragraph_deterministically(text, start_offset, tokenizer, max_t
             
     # Guardar el residuo final
     if current_text.strip():
-        chunks.append((
-            current_text.strip(), 
-            current_start, 
-            current_start + len(current_text)
-        ))
+        stripped = current_text.strip()
+        local_offset = current_text.index(stripped)
+        chunk_start = current_start + local_offset
+        chunk_end = chunk_start + len(stripped)
+        chunks.append((stripped, chunk_start, chunk_end))
         
     return chunks

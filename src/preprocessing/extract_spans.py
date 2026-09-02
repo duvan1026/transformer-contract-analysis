@@ -39,19 +39,23 @@ def extract_spans():
                         question,
                         is_impossible,
                         "",
+                        -1,
                         -1
                     ])
 
                 # Caso con múltiples spans
                 else:
                     for answer in answers:
+                        raw_text = answer["text"]
+                        start = answer["answer_start"]
                         rows.append([
                             id_documento,
                             categoria,
                             question,
                             is_impossible,
-                            clean_text(answer["text"]),
-                            answer["answer_start"]
+                            clean_text(raw_text),
+                            start,
+                            start + len(raw_text)
                         ])
 
     # Asegurar la existencia del directorio antes de escribir
@@ -74,7 +78,8 @@ def extract_spans():
             "question",
             "is_impossible",
             "span_text",
-            "offset"
+            "offset",
+            "offset_end"
         ])
 
         writer.writerows(rows)
