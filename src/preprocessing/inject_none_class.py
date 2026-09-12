@@ -38,14 +38,25 @@ def run():
     # Aseguramos de renombrar 'start_offset' a 'offset' si viene así del generador
     if "start_offset" in df_master_none.columns:
         df_master_none = df_master_none.rename(columns={"start_offset": "offset"})
-    
-    # Filtrar estrictamente las columnas requeridas
-    columnas_requeridas = ["id_documento", "categoria", "span_text", "offset"]
+
+    if "end_offset" in df_master_none.columns:
+        df_master_none = df_master_none.rename(columns={"end_offset": "offset_end"})
+
+    # offset_end ya viene calculado por generate_none_class.py sobre el texto
+    # crudo (match.end()) — se conserva tal cual. NO se recalcula aquí a partir
+    # de offset + len(span_text), porque span_text puede diferir en longitud
+    # del texto crudo si en algún momento se introduce normalización
+    # (clean_text) sobre los candidatos NONE.
+    columnas_requeridas = ["id_documento", "categoria", "span_text", "offset", "offset_end"]
     columnas_existentes = [col for col in columnas_requeridas if col in df_master_none.columns]
     df_master_none = df_master_none[columnas_existentes]
 
-    # offset_end de los spans NONE 
-    df_master_none["offset_end"] = df_master_none["offset"] + df_master_none["span_text"].str.len()
+    if "offset_end" not in df_master_none.columns:
+        raise ValueError(
+            "dataset_none_master.csv no trae 'end_offset'/'offset_end'. "
+            "Verifica que generate_none_class.py esté generando esta columna "
+            "antes de ejecutar inject_none_class.py."
+        )       
 
     # 3. Lógica de balanceo local por documento (Optimizado con Pandas)
     muestras_none_balanceadas = []
