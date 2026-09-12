@@ -70,7 +70,8 @@ class _UnidadAtomica:
 
 
 def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
-                        max_tokens: int, umbral_objetivo: int) -> list[dict]:
+                        max_tokens: int, umbral_objetivo: int,
+                        offset_end: int ) -> list[dict]:
     """
     Punto de entrada público. Divide `texto` en piezas equilibradas cuando
     excede `target_tokens`, preservando offsets absolutos, y garantiza que
@@ -113,7 +114,7 @@ def rebalancear_unidad(texto: str, offset_inicio: int, tokenizer,
         return [{
             "texto": texto,
             "start_offset": offset_inicio,
-            "end_offset": offset_inicio + len(texto),
+            "end_offset": offset_end,
             "tokens": tokens_totales,
             "metodo_division": _METODO_SIN_DIVIDIR,
         }]

@@ -38,6 +38,7 @@ def rebalancear_split_train(df_split: pd.DataFrame, tokenizer, max_tokens, umbra
     for unidad_original_id, fila in enumerate(df_split.to_dict(orient="records"), start=1):
         texto = str(fila.get("span_text", ""))
         offset_val = fila.get("offset")
+        offset_end_val = fila.get("offset_end")
         categoria = str(fila.get("categoria", "")).strip().lower()
 
         es_positiva = categoria != "none"
@@ -55,7 +56,7 @@ def rebalancear_split_train(df_split: pd.DataFrame, tokenizer, max_tokens, umbra
             filas_resultado.append(fila_out)
             continue
 
-        piezas = rebalancear_unidad(texto, int(offset_val), tokenizer, max_tokens, umbral_objetivo)
+        piezas = rebalancear_unidad(texto, int(offset_val), tokenizer, max_tokens, umbral_objetivo, int(offset_end_val))
         se_dividio = len(piezas) > 1
 
         for subspan_id, pieza in enumerate(piezas, start=1):
@@ -97,8 +98,10 @@ def rebalancear_fragmentos_inferencia(df_fragmentos: pd.DataFrame, tokenizer,  m
     for fila in df_fragmentos.to_dict(orient="records"):
         texto = str(fila.get("contenido", ""))
         start_offset = fila.get("start_offset")
+        end_offset = fila.get("end_offset")
+        
 
-        if pd.isna(start_offset) or not texto.strip():
+        if pd.isna(start_offset) or pd.isna(end_offset) or not texto.strip():
             fila_out = dict(fila)
             fila_out.update({
                 "subfragmento_id": 1,
@@ -107,7 +110,7 @@ def rebalancear_fragmentos_inferencia(df_fragmentos: pd.DataFrame, tokenizer,  m
             filas_resultado.append(fila_out)
             continue
 
-        piezas = rebalancear_unidad(texto, int(start_offset), tokenizer, max_tokens, umbral_objetivo)
+        piezas = rebalancear_unidad(texto, int(start_offset), tokenizer, max_tokens, umbral_objetivo, int(end_offset))
         se_dividio = len(piezas) > 1
 
         for subfragmento_id, pieza in enumerate(piezas, start=1):
