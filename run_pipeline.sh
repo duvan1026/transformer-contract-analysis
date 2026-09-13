@@ -16,6 +16,19 @@ if [ "$EXPERIMENT" != "baseline" ] && [ "$EXPERIMENT" != "balanced" ]; then
 fi
 
 # ==============================================================================
+# CONFIGURACIÓN DEL LOG
+# ==============================================================================
+
+LOG_DIR="logs"
+mkdir -p "$LOG_DIR"
+
+LOG_FILE="$LOG_DIR/pipeline_${EXPERIMENT}_$(date '+%Y%m%d_%H%M%S').log"
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "Archivo de log: $LOG_FILE"
+
+# ==============================================================================
 # FUNCIÓN AUXILIAR: MIDE TIEMPO Y REGISTRA FECHA/HORA
 # ==============================================================================
 run_step() {
@@ -64,7 +77,6 @@ run_step "[1/4] Aplicar Mapeo de Categorías" python src/preprocessing/apply_cat
 if [ "$EXPERIMENT" == "baseline" ]; then
     run_step "[2/4] Validar Dataset" python src/preprocessing/validate_dataset.py
     run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_density.py
-    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/rebalance_long_spans.py
     run_step "[2/4] Entrenar BERT Baseline" python src/training/train_bert_baseline.py
     
 elif [ "$EXPERIMENT" == "balanced" ]; then
@@ -82,7 +94,6 @@ run_step "[3/4] Evaluando Modelo (Test)" python src/evaluation/evaluate_test.py 
 
 run_step "[4/4] Inicializar Registro Maestro" python src/data/00_init_master_registry.py --model "$EXPERIMENT"
 run_step "[4/4] Preparar Lote de Documentos" python src/inference/01_prepare_batch_documents.py --model "$EXPERIMENT"
-
 
 if [ "$EXPERIMENT" == "balanced" ]; then
     run_step "[4/4] Preparar Lote de Documentos" python src/inference/01b_rebalance_fragments.py --model "$EXPERIMENT"
