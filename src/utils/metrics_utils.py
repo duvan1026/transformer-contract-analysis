@@ -8,6 +8,25 @@ simulación de umbrales y cálculo de métricas de desempeño del modelo.
 import pandas as pd
 from sklearn.metrics import classification_report
 
+def _parse_clases_solapadas(valor) -> set:
+    """
+    Parsea la columna 'clases_solapadas' (string separado por ';', generado
+    por get_true_label_details() en src/utils/spatial_utils.py, ya en
+    MAYÚSCULAS y ordenado alfabéticamente) en un conjunto de categorías.
+
+    Tratamiento defensivo: NaN, None o cadena vacía ("") se interpretan
+    como conjunto vacío, NUNCA como {''} -- evita que un fragmento sin
+    solape real (etiqueta_real == "NONE") cuente como falso positivo al
+    hacer `.split(';')` sobre una cadena vacía.
+    """
+    if pd.isna(valor):
+        return set()
+    valor = str(valor).strip()
+    if not valor:
+        return set()
+    return {c.strip().upper() for c in valor.split(";") if c.strip()}
+
+
 def apply_dynamic_threshold(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
     Regla de Negocio para el modelo Baseline.
@@ -51,18 +70,45 @@ def get_recall_at_k_report(df: pd.DataFrame, id2label: dict, annotation_registry
     (por fallo de la fragmentación, no del modelo) sigue contando en el
     denominador y penaliza el recall, en vez de desaparecer del cálculo.
 
+    CRITERIO DE ACIERTO DEL NUMERADOR (revisión posterior al fix de denominador):
+    Una categoría cuenta como recuperada en el Top-K cuando aparece en la
+    UNIÓN de `clases_solapadas` de los fragmentos Top-K, no únicamente
+    cuando es la etiqueta ganadora del desempate espacial (`etiqueta_real`).
+    Esto permite que un mismo fragmento, cuando varias cláusulas reales
+    distintas caen dentro de él (n_categorias_distintas > 1 en
+    get_true_label_details()), cuente simultáneamente como recuperación de
+    todas ellas. La ordenación de los fragmentos Top-K NO cambia: sigue
+    basada en `col_score` (score de softmax de la clase específica).
+
     El numerador (búsqueda de la clase en el Top-1/Top-3 por score dentro de
     los fragmentos de ese documento) no cambia: sigue operando sobre `df`.
 
     Args:
         df: ground_truth_results.csv (fragmentos con etiqueta_real y scores).
+            Debe incluir la columna 'clases_solapadas'.
         id2label: diccionario de clases del experimento (baseline o balanced).
         annotation_registry: DataFrame ["id_documento", "categoria"] con la
                               verdad de referencia, generado en
                               03_calculate_ground_truth.py vía build_annotation_registry().
     """
+
+    if "clases_solapadas" not in df.columns:
+        raise KeyError(
+            "La columna 'clases_solapadas' no está presente en el DataFrame "
+            "recibido por get_recall_at_k_report(). El ground truth "
+            "(ground_truth_results.csv) debe regenerarse con "
+            "03_calculate_ground_truth.py antes de calcular Recall@K."
+        )
+
     output = "=== B. EVALUACIÓN A NIVEL CONTRATO (Recall@K) ===\n"
     output += "Perspectiva Negocio: ¿La cláusula real está en el Top K de sugerencias?\n\n"
+    output += (
+        "Criterio de acierto: Recall@K se considera alcanzado cuando la "
+        "categoría objetivo aparece entre las categorías espacialmente "
+        "solapadas (clases_solapadas) de al menos uno de los fragmentos "
+        "Top-K, no únicamente cuando es la categoría ganadora del "
+        "desempate espacial (etiqueta_real).\n\n"
+    )
 
     valid_classes = [label.upper().strip() for label in id2label.values()]
 
@@ -92,11 +138,26 @@ def get_recall_at_k_report(df: pd.DataFrame, id2label: dict, annotation_registry
 
             # Ordenamos y tomamos el Top
             top_frags = doc_frags.sort_values(by=col_score, ascending=False)
-            top_1 = top_frags.head(1)["etiqueta_real"].values
-            top_3 = top_frags.head(3)["etiqueta_real"].values
 
-            if cls in top_1: hits_at_1 += 1
-            if cls in top_3: hits_at_3 += 1
+            # Numerador: NUEVO criterio. Unión de clases_solapadas de los
+            # fragmentos Top-1 / Top-3, en vez de la etiqueta_real única.
+            top_1_clases = set()
+            for valor in top_frags.head(1)["clases_solapadas"].values:
+                top_1_clases |= _parse_clases_solapadas(valor)
+
+            top_3_clases = set()
+            for valor in top_frags.head(3)["clases_solapadas"].values:
+                top_3_clases |= _parse_clases_solapadas(valor)
+
+            if cls in top_1_clases: hits_at_1 += 1
+            if cls in top_3_clases: hits_at_3 += 1
+
+
+            # top_1 = top_frags.head(1)["etiqueta_real"].values
+            # top_3 = top_frags.head(3)["etiqueta_real"].values
+
+            # if cls in top_1: hits_at_1 += 1
+            # if cls in top_3: hits_at_3 += 1
 
         r_at_1 = (hits_at_1 / len(docs_with_class)) * 100
         r_at_3 = (hits_at_3 / len(docs_with_class)) * 100
