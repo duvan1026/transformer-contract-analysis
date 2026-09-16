@@ -4,10 +4,10 @@ from src.utils.quality_filters import FragmentQualityFilter
 from src.config.text_standards import (
     PARAGRAPH_DELIMITER,
     SENTENCE_BOUNDARY_REGEX,
-    MAX_TOKENS
+    MAX_CONTENT_TOKENS
 )
 
-def fragment_single_document(document_id, raw_text, tokenizer, max_tokens=MAX_TOKENS):
+def fragment_single_document(document_id, raw_text, tokenizer, max_tokens=MAX_CONTENT_TOKENS):
     """
     Estrategia Relacional Determinista:
     - id_documento: Nombre del contrato.

@@ -11,7 +11,7 @@ A diferencia de 'ContractDataset', esta clase está diseñada para "datos ciegos
 
 import torch
 from torch.utils.data import Dataset
-from src.config.text_standards import MAX_TOKENS
+from src.config.text_standards import MAX_MODEL_TOKENS
 
 class BERTInferenceDataset(Dataset):
     """
@@ -19,7 +19,7 @@ class BERTInferenceDataset(Dataset):
     en tensores numéricos asimilables por el modelo BERT en modo evaluación.
     """
 
-    def __init__(self, texts, tokenizer, max_length=MAX_TOKENS):
+    def __init__(self, texts, tokenizer, max_length=MAX_MODEL_TOKENS):
         """
         Inicializa el lector de datos para inferencia.
 
@@ -30,7 +30,7 @@ class BERTInferenceDataset(Dataset):
         tokenizer : AutoTokenizer
             Tokenizador oficial de BERT cargado desde el directorio del modelo final.
         max_length : int, opcional
-            Límite físico de tokens (por defecto usa MAX_TOKENS de text_standards, ej: 512).
+            Límite físico de tokens, con [CLS]/[SEP] incluidos (por defecto usa MAX_MODEL_TOKENS de text_standards, 512).
         """
         self.texts = texts
         self.tokenizer = tokenizer

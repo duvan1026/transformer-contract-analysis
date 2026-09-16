@@ -168,7 +168,7 @@ La estrategia de partición difiere según la rama experimental:
 
 ### Manejo de textos largos: Chunking Determinista
 
-Dado que BERT opera con una ventana física máxima de **512 tokens** (`MAX_TOKENS`), tanto la generación de la clase `NONE` como la fase de inferencia sobre documentos nuevos (Sección 6) utilizan un motor de **fragmentación determinista basada en párrafos**, no una ventana deslizante (*sliding window*):
+Dado que BERT opera con una ventana física máxima de **512 tokens** (`MAX_MODEL_TOKENS`), tanto la generación de la clase `NONE` como la fase de inferencia sobre documentos nuevos (Sección 6) utilizan un motor de **fragmentación determinista basada en párrafos**, no una ventana deslizante (*sliding window*):
 
 1. Se segmenta el contrato en párrafos naturales, conservando los *offsets* absolutos de carácter.
 2. Si el párrafo cabe en el límite de tokens, se conserva íntegro como un único fragmento.

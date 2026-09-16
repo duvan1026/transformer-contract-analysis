@@ -138,7 +138,7 @@ TOKEN_LENGTH_CLASS_BALANCE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "balance_clase
 TOKEN_LENGTH_COMPOSITION_WITH_NONE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_con_none.png"
 # Composicion relativa por fuente, solo clases positivas (NONE excluido y renormalizado)
 TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_solo_positivas.png"
-# Spans de train/val/test en riesgo de truncamiento (>MAX_TOKENS)
+# Spans de train/val/test en riesgo de truncamiento (>MAX_CONTENT_TOKENS)
 TOKEN_LENGTH_TRUNCATION_RISK_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "riesgo_truncamiento.png"
 # Ranking por clase del % de fragmentos reales en zona de riesgo (solo inferencia)
 TOKEN_LENGTH_RISK_BY_CLASS_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "ranking_riesgo_por_clase.png"

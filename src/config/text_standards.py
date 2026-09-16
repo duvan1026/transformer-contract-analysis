@@ -3,9 +3,22 @@ Estándares técnicos para el procesamiento de texto y fragmentación.
 Define los requisitos mínimos de calidad y límites físicos del modelo.
 """
 
+
 # --- LÍMITES DEL MODELO ---
-# Tamaño máximo de secuencia para BERT (coherencia entre train e inferencia)
-MAX_TOKENS = 512
+# Límite físico de entrada de BERT: incluye los tokens especiales [CLS] y
+# [SEP] añadidos por el tokenizer (add_special_tokens=True, comportamiento
+# por defecto de HuggingFace). Es el valor usado como max_length en la
+# tokenización final real: ContractDataset (entrenamiento, bert_dataset.py,
+# literal hardcodeado que NO se toca en este cambio) y BERTInferenceDataset
+# (inferencia, inference_dataset.py).
+MAX_MODEL_TOKENS = 512
+
+# Máximo de tokens de CONTENIDO puro (sin tokens especiales). Se deriva de
+# MAX_MODEL_TOKENS reservando 2 posiciones para [CLS] y [SEP], de modo que
+# ambos valores no puedan desincronizarse manualmente:
+#   MAX_CONTENT_TOKENS + [CLS] + [SEP] == MAX_MODEL_TOKENS
+MAX_CONTENT_TOKENS = MAX_MODEL_TOKENS - 2  # 510
+
 
 # --- REGLAS DE CALIDAD (Filtros de Auditoría) ---
 # Longitud mínima de caracteres para que un fragmento no sea considerado "basura"
@@ -108,14 +121,12 @@ RECALL_BY_LENGTH_MIN_N_BIN = 15
 # encima de este número NO se corta automáticamente -- solo se corta si,
 # además, alguna de sus partes irreducibles supera FRAGMENT_REBALANCE_MAX_TOKENS.
 FRAGMENT_REBALANCE_TARGET_TOKENS = 250
- 
-# Límite físico real: el máximo de tokens que el modelo puede procesar sin
-# truncar. Antes, un solo número (250) cumplía a la vez el rol de objetivo y
-# el de límite físico, lo que forzaba divisiones innecesarias en unidades
-# perfectamente seguras para el modelo (por ejemplo, un bloque de 320 tokens
-# sin puntos de corte naturales no necesita dividirse: está muy por debajo
-# de este límite).
-FRAGMENT_REBALANCE_MAX_TOKENS = 512
+
+
+# Límite máximo de tokens de CONTENIDO que una pieza puede tener tras el
+# rebalanceo, antes de tokenizarse para el modelo. Se deriva de
+# MAX_CONTENT_TOKENS (= MAX_MODEL_TOKENS - 2, reservando [CLS]/[SEP]) 
+FRAGMENT_REBALANCE_MAX_TOKENS = MAX_CONTENT_TOKENS  # 510
  
 # Si es False (valor por defecto), las categorías positivas (todo lo que no
 # sea "NONE") nunca se dividen en el rebalanceo de entrenamiento -- se dejan
