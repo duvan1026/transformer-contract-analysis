@@ -339,27 +339,43 @@ Abre tu terminal en la raíz de este proyecto y empaqueta el entorno:
 docker build -t pipeline-tfm .
 ```
 
-### Paso 2: Ejecutar el pipeline completo
+### Paso 2: Ejecutar el pipeline
 
-Lanza el contenedor mapeando las carpetas de datos, modelos y reportes con tu equipo local. El script orquestador `run_pipeline.sh` **requiere obligatoriamente** el argumento `baseline` o `balanced`; si se omite o es inválido, el pipeline se detiene con un mensaje de uso.
+Lanza el contenedor mapeando las carpetas de datos, modelos, reportes y logs
+con tu equipo local. El script orquestador `run_pipeline.sh` **requiere
+obligatoriamente** uno de estos 5 valores: `baseline`, `balanced`,
+`build_holdout`, `baseline_holdout`, `balanced_holdout`; si se omite o es
+inválido, el pipeline se detiene con un mensaje de uso.
 
 **En PowerShell (Windows):**
 
 ```powershell
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh baseline
+# 1. Ciclo normal de entrenamiento y evaluación — ejecutar ambas lanes primero
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" -v "$(pwd)/logs:/app/logs" pipeline-tfm ./run_pipeline.sh baseline
 
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh balanced
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" -v "$(pwd)/logs:/app/logs" pipeline-tfm ./run_pipeline.sh balanced
+
+# 2. Construcción del lote final de holdout (100 contratos, una sola vez,
+#    SOLO después de que ambas lanes anteriores ya hayan corrido)
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" -v "$(pwd)/logs:/app/logs" pipeline-tfm ./run_pipeline.sh build_holdout
+
+# 3. Evaluación definitiva sobre el lote de holdout, en cualquier orden
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" -v "$(pwd)/logs:/app/logs" pipeline-tfm ./run_pipeline.sh baseline_holdout
+
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" -v "$(pwd)/logs:/app/logs" pipeline-tfm ./run_pipeline.sh balanced_holdout
 ```
 
-**En Bash (Linux/Mac):**
+**En Bash (Linux/Mac):** mismos comandos, sustituyendo `$(pwd)` según tu shell habitual.
 
-```bash
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh baseline
-
-docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(pwd)/docs/reports:/app/docs/reports" pipeline-tfm ./run_pipeline.sh balanced
-```
-
-Cada ejecución corre de forma autónoma **las 4 fases completas** del sistema (limpieza → ingeniería de datos → entrenamiento/evaluación → inferencia en producción), imprimiendo en consola el timestamp de inicio/fin y la duración de cada paso individual, además de un resumen final con el tiempo total del pipeline.
+- `baseline` / `balanced`: corren las 4 fases completas (limpieza →
+  ingeniería de datos → entrenamiento/evaluación → inferencia normal).
+- `build_holdout`: construye el lote final de 100 contratos comunes a
+  ambas lanes. Se ejecuta **una sola vez**; si los archivos ya existen,
+  el script se detiene con un mensaje explícito para evitar sobrescribir
+  una selección ya consumida por una inferencia de holdout.
+- `baseline_holdout` / `balanced_holdout`: ejecutan únicamente la
+  inferencia (sin limpieza, sin reentrenamiento) sobre el lote fijo de
+  holdout, usando el modelo ya entrenado de la lane correspondiente.
 
 
 ## 9. Próximos Pasos (Roadmap)
