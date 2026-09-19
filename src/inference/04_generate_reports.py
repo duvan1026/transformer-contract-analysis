@@ -24,7 +24,13 @@ from src.config.paths import (
     INFERENCE_METRICS_REPORT,
     INFERENCE_CONFUSION_MATRIX_IMAGE,
     REPORT_FULL_CONFIDENCE_NAME,
-    REPORT_THRESHOLD_PREFIX
+    REPORT_THRESHOLD_PREFIX,
+    HOLDOUT_GROUND_TRUTH_BASELINE, 
+    HOLDOUT_GROUND_TRUTH_BALANCED, 
+    HOLDOUT_ANNOTATION_REGISTRY_BASELINE, 
+    HOLDOUT_ANNOTATION_REGISTRY_BALANCED, 
+    HOLDOUT_INFERENCE_BASELINE_DIR, 
+    HOLDOUT_INFERENCE_BALANCED_DIR
 )
 from src.config.text_standards import CONFIDENCE_THRESHOLDS
 
@@ -85,17 +91,28 @@ def procesar_balanced(df: pd.DataFrame, annotation_registry: pd.DataFrame, out_d
 def main(model_type):
     print(f"[*] Fase 3B: Inteligencia de Negocio - MODO: {model_type.upper()}")
 
-    # Enrutamiento dinámico completo
     if model_type == "balanced":
         input_path = GROUND_TRUTH_BALANCED
         annotation_registry_path = ANNOTATION_REGISTRY_BALANCED
         out_dir = INFERENCE_BALANCED_DIR
         current_id2label = ID2LABEL_BALANCED
-    else:
+    elif model_type == "baseline":
         input_path = GROUND_TRUTH_BASELINE
         annotation_registry_path = ANNOTATION_REGISTRY_BASELINE
         out_dir = INFERENCE_BASELINE_DIR
         current_id2label = ID2LABEL_BASELINE
+    elif model_type == "balanced_holdout":
+        input_path = HOLDOUT_GROUND_TRUTH_BALANCED
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BALANCED
+        out_dir = HOLDOUT_INFERENCE_BALANCED_DIR
+        current_id2label = ID2LABEL_BALANCED
+    elif model_type == "baseline_holdout":
+        input_path = HOLDOUT_GROUND_TRUTH_BASELINE
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BASELINE
+        out_dir = HOLDOUT_INFERENCE_BASELINE_DIR
+        current_id2label = ID2LABEL_BASELINE
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
 
     if not input_path.exists():
         print(f"[ERROR] Archivo Ground Truth no encontrado: {input_path}")
@@ -109,16 +126,22 @@ def main(model_type):
     df = pd.read_csv(input_path)
     annotation_registry = pd.read_csv(annotation_registry_path)
 
-    if model_type == "baseline":
+    if model_type in ("baseline", "baseline_holdout"):
         procesar_baseline(df, annotation_registry, out_dir, current_id2label)
-    else:
+    elif model_type in ("balanced", "balanced_holdout"):
         procesar_balanced(df, annotation_registry, out_dir, current_id2label)
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
 
     print("\n[+] Reportes y JSONs generados con éxito.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, choices=["baseline", "balanced"], default="baseline")
+    parser.add_argument(
+        "--model", type=str,
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
+        default="baseline"
+    )
     args = parser.parse_args()
     main(args.model)
