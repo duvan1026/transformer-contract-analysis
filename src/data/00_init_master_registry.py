@@ -30,12 +30,12 @@ def init_registry(model_type):
     print(f"Iniciando la creación del Registro Maestro (Snapshot) para: '{model_type.upper()}'...")
 
     # 1. Determinar la ruta de salida y el nombre del experimento internamente
-    if model_type == "baseline":
-        output_path = MASTER_REGISTRY_BASELINE
-        experiment_name = "v1_baseline"
-    else:
+    if model_type == "balanced":
         output_path = MASTER_REGISTRY_BALANCED
         experiment_name = "v2_balanced"
+    else:
+        output_path = MASTER_REGISTRY_BASELINE
+        experiment_name = "v1_baseline"
     
     # 2. Obtener TODOS los documentos que existen en CUAD
     with open(CUAD_JSON, 'r', encoding='utf-8') as f:
