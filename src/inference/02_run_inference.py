@@ -30,7 +30,13 @@ from src.config.paths import (
     SCORED_RESULTS_BASELINE,
     SCORED_RESULTS_BALANCED,
     MODEL_BERT_BASELINE_DIR,
-    MODEL_BERT_BALANCED_DIR
+    MODEL_BERT_BALANCED_DIR,
+    HOLDOUT_REGISTRY_BASELINE, 
+    HOLDOUT_REGISTRY_BALANCED, 
+    HOLDOUT_FRAGMENTS_BASELINE, 
+    HOLDOUT_FRAGMENTS_BALANCED, 
+    HOLDOUT_SCORED_RESULTS_BASELINE, 
+    HOLDOUT_SCORED_RESULTS_BALANCED
 )
 
 # Importación de estándares técnicos
@@ -57,13 +63,27 @@ def main(model_type):
         results_path = SCORED_RESULTS_BALANCED
         model_path = MODEL_BERT_BALANCED_DIR
         current_id2label = ID2LABEL_BALANCED
-    else:
+    elif model_type == "baseline":
         registry_path = MASTER_REGISTRY_BASELINE
         fragments_path = FRAGMENTS_BASELINE
         results_path = SCORED_RESULTS_BASELINE
         model_path = MODEL_BERT_BASELINE_DIR
         current_id2label = ID2LABEL_BASELINE
-
+    elif model_type == "balanced_holdout":
+        registry_path = HOLDOUT_REGISTRY_BALANCED
+        fragments_path = HOLDOUT_FRAGMENTS_BALANCED
+        results_path = HOLDOUT_SCORED_RESULTS_BALANCED
+        model_path = MODEL_BERT_BALANCED_DIR      # mismo modelo de la lane base
+        current_id2label = ID2LABEL_BALANCED
+    elif model_type == "baseline_holdout":
+        registry_path = HOLDOUT_REGISTRY_BASELINE
+        fragments_path = HOLDOUT_FRAGMENTS_BASELINE
+        results_path = HOLDOUT_SCORED_RESULTS_BASELINE
+        model_path = MODEL_BERT_BASELINE_DIR      # mismo modelo de la lane base
+        current_id2label = ID2LABEL_BASELINE
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
+    
     # ==========================================
     # 2. VALIDACIÓN DE ARCHIVOS
     # ==========================================
@@ -150,6 +170,11 @@ def main(model_type):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, choices=["baseline", "balanced"], default="baseline")
+    parser.add_argument(
+        "--model", type=str,
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
+        default="baseline"
+    )
     args = parser.parse_args()
+
     main(args.model)

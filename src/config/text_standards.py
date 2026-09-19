@@ -51,6 +51,10 @@ BATCH_SIZE_DOCS = 100
 EXPERIMENT_NAME_INFERENCE_BASELINE = "v2_inference_Baseline"
 EXPERIMENT_NAME_INFERENCE_BALANCED = "v2_inference_Balanced"
 
+N_HOLDOUT = 100
+EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT = "v2_inference_Baseline_Holdout"
+EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT = "v2_inference_Balanced_Holdout"
+
 # --- FLUJO DE DOCUMENTOS (Registro Maestro) ---
 DOC_STATES = {
     "AVAILABLE": "Disponible",      # Contrato crudo listo para ser tomado

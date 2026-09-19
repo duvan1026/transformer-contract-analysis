@@ -31,6 +31,12 @@ from src.config.paths import (
     REBALANCE_REJECTED_INFERENCE_BALANCED,
     REBALANCE_REPORT_INFERENCE_BASELINE,
     REBALANCE_REPORT_INFERENCE_BALANCED,
+    HOLDOUT_FRAGMENTS_BASELINE,
+    HOLDOUT_FRAGMENTS_BALANCED, 
+    HOLDOUT_REBALANCE_REPORT_BASELINE, 
+    HOLDOUT_REBALANCE_REPORT_BALANCED,
+    HOLDOUT_REBALANCE_REJECTED_BASELINE,
+    HOLDOUT_REBALANCE_REJECTED_BALANCED
 )
 from src.config.text_standards import (
     FRAGMENT_REBALANCE_TARGET_TOKENS,
@@ -48,10 +54,20 @@ def main(model_type):
         fragments_path = FRAGMENTS_BALANCED
         rejected_path = REBALANCE_REJECTED_INFERENCE_BALANCED
         report_path = REBALANCE_REPORT_INFERENCE_BALANCED
-    else:
+    elif model_type == "baseline":
         fragments_path = FRAGMENTS_BASELINE
         rejected_path = REBALANCE_REJECTED_INFERENCE_BASELINE
         report_path = REBALANCE_REPORT_INFERENCE_BASELINE
+    elif model_type == "balanced_holdout":
+        fragments_path = HOLDOUT_FRAGMENTS_BALANCED
+        rejected_path = HOLDOUT_REBALANCE_REJECTED_BALANCED
+        report_path = HOLDOUT_REBALANCE_REPORT_BALANCED
+    elif model_type == "baseline_holdout":
+        fragments_path = HOLDOUT_FRAGMENTS_BASELINE
+        rejected_path = HOLDOUT_REBALANCE_REJECTED_BASELINE
+        report_path = HOLDOUT_REBALANCE_REPORT_BASELINE
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
 
     if not fragments_path.exists():
         print(f"[ERROR] No se encontró {fragments_path}.")
@@ -89,6 +105,13 @@ def main(model_type):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Rebalancea fragmentos de inferencia largos antes de la inferencia neuronal.")
-    parser.add_argument("--model", type=str, choices=["baseline", "balanced"], default="baseline")
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
+        required=True,
+        help="Selecciona el entorno: 'baseline', 'balanced', o el lote final "
+             "de holdout ('baseline_holdout' / 'balanced_holdout')."
+    )
     args = parser.parse_args()
     main(args.model)

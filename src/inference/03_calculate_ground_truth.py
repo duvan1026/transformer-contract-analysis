@@ -26,6 +26,14 @@ from src.config.paths import (
     MASTER_REGISTRY_BALANCED,
     ANNOTATION_REGISTRY_BASELINE,
     ANNOTATION_REGISTRY_BALANCED,
+    HOLDOUT_REGISTRY_BASELINE, 
+    HOLDOUT_REGISTRY_BALANCED, 
+    HOLDOUT_SCORED_RESULTS_BASELINE, 
+    HOLDOUT_SCORED_RESULTS_BALANCED, 
+    HOLDOUT_GROUND_TRUTH_BASELINE, 
+    HOLDOUT_GROUND_TRUTH_BALANCED, 
+    HOLDOUT_ANNOTATION_REGISTRY_BASELINE, 
+    HOLDOUT_ANNOTATION_REGISTRY_BALANCED
 )
 
 from src.utils.spatial_utils import load_ground_truth, get_true_label_details, build_annotation_registry
@@ -36,6 +44,8 @@ from src.config.text_standards import (
     DOC_STATES,
     EXPERIMENT_NAME_INFERENCE_BASELINE,
     EXPERIMENT_NAME_INFERENCE_BALANCED,
+    EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT, 
+    EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT
 )
 
 
@@ -73,13 +83,30 @@ def main(model_type):
         annotation_registry_path = ANNOTATION_REGISTRY_BALANCED
         experiment_name = EXPERIMENT_NAME_INFERENCE_BALANCED
         current_id2label = ID2LABEL_BALANCED
-    else:
+    elif model_type == "baseline":
         input_path = SCORED_RESULTS_BASELINE
         output_path = GROUND_TRUTH_BASELINE
         registry_path = MASTER_REGISTRY_BASELINE
         annotation_registry_path = ANNOTATION_REGISTRY_BASELINE
         experiment_name = EXPERIMENT_NAME_INFERENCE_BASELINE
         current_id2label = ID2LABEL_BASELINE
+    elif model_type == "balanced_holdout":
+        input_path = HOLDOUT_SCORED_RESULTS_BALANCED
+        output_path = HOLDOUT_GROUND_TRUTH_BALANCED
+        registry_path = HOLDOUT_REGISTRY_BALANCED
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BALANCED
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT
+        current_id2label = ID2LABEL_BALANCED
+    elif model_type == "baseline_holdout":
+        input_path = HOLDOUT_SCORED_RESULTS_BASELINE
+        output_path = HOLDOUT_GROUND_TRUTH_BASELINE
+        registry_path = HOLDOUT_REGISTRY_BASELINE
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BASELINE
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT
+        current_id2label = ID2LABEL_BASELINE
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
+    
 
     if not input_path.exists():
         print(f"[ERROR] Archivo de inferencia no encontrado en: {input_path}")
@@ -131,6 +158,10 @@ def main(model_type):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, choices=["baseline", "balanced"], default="baseline")
+    parser.add_argument(
+        "--model", type=str,
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
+        default="baseline"
+    )
     args = parser.parse_args()
     main(args.model)
