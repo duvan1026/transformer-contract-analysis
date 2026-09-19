@@ -177,9 +177,7 @@ def get_true_label_details(doc_id: str, frag_start: int, frag_end: int, annotati
 
       - n_categorias_distintas: cantidad de categorías ÚNICAS en competencia
         (= número de elementos en clases_solapadas). Es el indicador correcto
-        para aislar ambigüedad inter-clase real (ej. Termination for
-        Convenience vs. Limitation of Liability, patrón #5 identificado por
-        Gabriel Guerrero) separada de la dilución intra-clase (misma
+        para aislar ambigüedad inter-clase real separada de la dilución intra-clase (misma
         categoría repetida dentro de un fragmento demasiado largo).
 
       - overlap_chars_ganador: caracteres de solape de la cláusula ganadora.
