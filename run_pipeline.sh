@@ -7,10 +7,18 @@ set -e # Detiene la ejecución si hay algún error
 EXPERIMENT=$1
 
 # Validar argumento
-if [ "$EXPERIMENT" != "baseline" ] && [ "$EXPERIMENT" != "balanced" ]; then
+VALID_EXPERIMENTS="baseline balanced baseline_holdout balanced_holdout build_holdout"
+EXPERIMENTO_VALIDO=false
+for e in $VALID_EXPERIMENTS; do
+    if [ "$EXPERIMENT" == "$e" ]; then
+        EXPERIMENTO_VALIDO=true
+    fi
+done
+
+if [ "$EXPERIMENTO_VALIDO" != "true" ]; then
     echo "================================================================"
     echo "ERROR: Debes especificar el tipo de experimento."
-    echo "Uso: ./run_pipeline.sh [baseline | balanced]"
+    echo "Uso: ./run_pipeline.sh [baseline | balanced | baseline_holdout | balanced_holdout | build_holdout]"
     echo "================================================================"
     exit 1
 fi
