@@ -376,7 +376,3 @@ docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/models:/app/models" -v "$(
 - `baseline_holdout` / `balanced_holdout`: ejecutan únicamente la
   inferencia (sin limpieza, sin reentrenamiento) sobre el lote fijo de
   holdout, usando el modelo ya entrenado de la lane correspondiente.
-
-
-## 9. Próximos Pasos (Roadmap)
-* **Fase 2 (En desarrollo):** Transición de un modelo de 5 clases a 6 clases, incorporando explícitamente la categoría `NONE`. Esto permitirá al modelo aprender semánticamente a descartar texto irrelevante o cláusulas estándar (ej. definiciones) sin depender exclusivamente de filtros por umbral de confianza, mitigando el problema del desbalance de clases y reduciendo drásticamente los Falsos Positivos de alta confianza.
