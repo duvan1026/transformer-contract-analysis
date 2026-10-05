@@ -61,14 +61,10 @@ def get_recall_at_k_report(df: pd.DataFrame, id2label: dict, annotation_registry
     apareció entre los primeros K resultados ordenados por confianza matemática.
     Ignora explícitamente la clase 'NONE'.
 
-    FIX (denominador de Recall@K, ver hilo de revisión con Gabriel Guerrero):
-    El denominador ("docs_with_class") ya NO se calcula a partir de los
-    fragmentos que sobrevivieron en `df` — se calcula a partir de
-    `annotation_registry`, que contiene la verdad de referencia (anotaciones
-    originales de CUAD) para todos los contratos efectivamente evaluados.
-    Así, un contrato cuya cláusula real no fue capturada por ningún fragmento
-    (por fallo de la fragmentación, no del modelo) sigue contando en el
-    denominador y penaliza el recall, en vez de desaparecer del cálculo.
+    Criterio del denominador de Recall@K:
+    el denominador se obtiene del registro de anotaciones de CUAD correspondiente
+    a los contratos evaluados, y no de los fragmentos que sobrevivieron al
+    procesamiento.
 
     CRITERIO DE ACIERTO DEL NUMERADOR (revisión posterior al fix de denominador):
     Una categoría cuenta como recuperada en el Top-K cuando aparece en la
@@ -117,8 +113,8 @@ def get_recall_at_k_report(df: pd.DataFrame, id2label: dict, annotation_registry
         var_under = f"score_{cls.lower().replace(' ', '_').replace('-', '_')}"
         col_score = var_under if var_under in df.columns else f"score_{cls.lower().replace(' ', '_')}"
 
-        # FIX: contratos que REALMENTE tienen esta cláusula según CUAD,
-        # no según qué fragmentos sobrevivieron en df.
+        # El denominador se obtiene de las anotaciones originales de CUAD,
+        # independientemente de los fragmentos disponibles en el resultado de inferencia.
         docs_with_class = annotation_registry[
             annotation_registry["categoria"] == cls
         ]["id_documento"].unique()

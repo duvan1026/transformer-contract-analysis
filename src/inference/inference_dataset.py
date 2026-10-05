@@ -4,9 +4,8 @@ src/inference/inference_dataset.py
 Dataset especializado para el proceso de Inferencia Enriquecida de contratos.
 Hereda de torch.utils.data.Dataset para integrarse nativamente con DataLoaders.
 
-A diferencia de 'ContractDataset', esta clase está diseñada para "datos ciegos":
-1. NO busca ni exige la columna 'categoria' (Labels), ya que el objetivo es predecirlas.
-2. Está acoplada a la columna 'contenido' generada por el script de fragmentación.
+Dataset utilizado durante la inferencia, cuando las etiquetas reales
+no forman parte de la entrada.
 """
 
 import torch

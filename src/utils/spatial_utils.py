@@ -130,9 +130,8 @@ def _find_overlapping_matches(doc_id: str, frag_start: int, frag_end: int, annot
     se conserva ann_end además de ann_start para poder reconstruir el offset
     completo de la anotación ganadora en get_true_label_details().
 
-    Único punto donde vive el criterio de desempate del fix A1: mayor solape
-    en caracteres primero; ante empate exacto, menor offset de inicio.
-    Determinista, sin depender en ningún momento de pred_raw.
+    Único punto donde se aplica el criterio de desempate espacial:
+    se selecciona la categoría con mayor solapamiento.
     """
     clean_doc_id = str(doc_id).strip().lower()
     if clean_doc_id not in annotations:
@@ -153,9 +152,8 @@ def _find_overlapping_matches(doc_id: str, frag_start: int, frag_end: int, annot
 def get_true_label_for_fragment(doc_id: str, frag_start: int, frag_end: int, annotations: dict) -> str:
     """
     Calcula la superposición espacial y devuelve SOLO la etiqueta real
-    estandarizada en MAYÚSCULAS. Ya no recibe pred_raw (fix de circularidad).
-    Se mantiene por compatibilidad con cualquier otro llamador que solo
-    necesite la etiqueta, sin el detalle diagnóstico de get_true_label_details().
+    estandarizada en MAYÚSCULAS. No utiliza la predicción del modelo para calcular la etiqueta real,
+    evitando circularidad entre predicción y ground truth.
     """
     matches = _find_overlapping_matches(doc_id, frag_start, frag_end, annotations)
     if not matches:
