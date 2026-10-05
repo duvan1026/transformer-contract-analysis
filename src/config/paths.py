@@ -33,6 +33,11 @@ META_DATA_DIR = DATA_DIR / "metadata"
 MASTER_REGISTRY_BASELINE = META_DATA_DIR / "master_registry_baseline.csv"
 MASTER_REGISTRY_BALANCED = META_DATA_DIR / "master_registry_balanced.csv"
 
+HOLDOUT_AUDIT_FILE = META_DATA_DIR / "final_holdout_audit.csv"
+
+HOLDOUT_REGISTRY_BASELINE = META_DATA_DIR / "final_holdout_registry_baseline.csv"
+HOLDOUT_REGISTRY_BALANCED = META_DATA_DIR / "final_holdout_registry_balanced.csv"
+
 RAW_DATA_DIR = DATA_DIR / "raw"
 CUAD_JSON = RAW_DATA_DIR / "CUAD_v1.json"
 CATEGORY_MAPPING_FILE = RAW_DATA_DIR / "category_mapping.xlsx"
@@ -138,7 +143,7 @@ TOKEN_LENGTH_CLASS_BALANCE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "balance_clase
 TOKEN_LENGTH_COMPOSITION_WITH_NONE_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_con_none.png"
 # Composicion relativa por fuente, solo clases positivas (NONE excluido y renormalizado)
 TOKEN_LENGTH_COMPOSITION_POSITIVE_ONLY_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "composicion_relativa_solo_positivas.png"
-# Spans de train/val/test en riesgo de truncamiento (>MAX_TOKENS)
+# Spans de train/val/test en riesgo de truncamiento (>MAX_CONTENT_TOKENS)
 TOKEN_LENGTH_TRUNCATION_RISK_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "riesgo_truncamiento.png"
 # Ranking por clase del % de fragmentos reales en zona de riesgo (solo inferencia)
 TOKEN_LENGTH_RISK_BY_CLASS_BASELINE = TOKEN_LENGTH_BASELINE_DIR / "ranking_riesgo_por_clase.png"
@@ -186,3 +191,54 @@ IMPACT_SIMULATION_CHART_BASELINE = RECALL_BY_LENGTH_BASELINE_DIR / "simulacion_i
 
 IMPACT_SIMULATION_STATS_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "simulacion_impacto.xlsx"
 IMPACT_SIMULATION_CHART_BALANCED = RECALL_BY_LENGTH_BALANCED_DIR / "simulacion_impacto.png"
+
+ANNOTATION_REGISTRY_BASELINE = INFERENCE_BASELINE_DIR / "annotation_registry.csv"
+ANNOTATION_REGISTRY_BALANCED = INFERENCE_BALANCED_DIR / "annotation_registry.csv"
+
+# ==============================================================================
+# REBALANCEO DE SPANS/FRAGMENTOS LARGOS
+# ==============================================================================
+
+REBALANCING_REPORTS_DIR = REPORTS_DIR / "rebalancing"
+
+# --- Train/val/test (un único CSV de rechazos y un único reporte que
+# cubre los tres splits, con columna/sección "split", igual que ya hace
+# SPLIT_REPORT_FILE con train/val/test combinados) ---
+REBALANCE_REJECTED_TRAIN = PROCESSED_DATA_DIR / "rebalance_rejected_train_val_test.csv"
+REBALANCE_REPORT_TRAIN = REBALANCING_REPORTS_DIR / "rebalance_train_val_test_report.txt"
+
+# --- Inferencia: un archivo de rechazos y un reporte por carril,
+# consistente con el resto de artefactos de inferencia (aislados por
+# experimento en INFERENCE_BASELINE_DIR / INFERENCE_BALANCED_DIR) ---
+REBALANCE_REJECTED_INFERENCE_BASELINE = INFERENCE_BASELINE_DIR / "rebalance_rejected_fragments.csv"
+REBALANCE_REPORT_INFERENCE_BASELINE = REBALANCING_REPORTS_DIR / "baseline_report.txt"
+
+REBALANCE_REJECTED_INFERENCE_BALANCED = INFERENCE_BALANCED_DIR / "rebalance_rejected_fragments.csv"
+REBALANCE_REPORT_INFERENCE_BALANCED = REBALANCING_REPORTS_DIR / "balanced_report.txt"
+
+
+# ==============================
+# LOTE FINAL DE HOLDOUT (Evaluación definitiva Baseline vs Balanced)
+# ==============================
+
+HOLDOUT_DATA_DIR = DATA_DIR / "holdout_final"
+
+HOLDOUT_INFERENCE_BASELINE_DIR = HOLDOUT_DATA_DIR / "baseline"
+HOLDOUT_FRAGMENTS_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "batch_fragments.csv"
+HOLDOUT_REJECTED_AUDIT_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "rejected_fragments_audit.csv"
+HOLDOUT_SCORED_RESULTS_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "inference_scored_results.csv"
+HOLDOUT_GROUND_TRUTH_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "ground_truth_results.csv"
+HOLDOUT_ANNOTATION_REGISTRY_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "annotation_registry.csv"
+
+HOLDOUT_INFERENCE_BALANCED_DIR = HOLDOUT_DATA_DIR / "balanced"
+HOLDOUT_FRAGMENTS_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "batch_fragments.csv"
+HOLDOUT_REJECTED_AUDIT_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "rejected_fragments_audit.csv"
+HOLDOUT_SCORED_RESULTS_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "inference_scored_results.csv"
+HOLDOUT_GROUND_TRUTH_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "ground_truth_results.csv"
+HOLDOUT_ANNOTATION_REGISTRY_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "annotation_registry.csv"
+
+HOLDOUT_REBALANCE_REJECTED_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "rebalance_rejected_fragments.csv"
+HOLDOUT_REBALANCE_REPORT_BASELINE = HOLDOUT_INFERENCE_BASELINE_DIR / "rebalance_report.txt"
+
+HOLDOUT_REBALANCE_REJECTED_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "rebalance_rejected_fragments.csv"
+HOLDOUT_REBALANCE_REPORT_BALANCED = HOLDOUT_INFERENCE_BALANCED_DIR / "rebalance_report.txt"

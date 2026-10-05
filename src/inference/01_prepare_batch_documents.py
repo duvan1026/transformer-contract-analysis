@@ -27,7 +27,15 @@ from src.config.paths import (
     FRAGMENTS_BASELINE,
     FRAGMENTS_BALANCED,
     REJECTED_AUDIT_BASELINE,
-    REJECTED_AUDIT_BALANCED
+    REJECTED_AUDIT_BALANCED,
+    HOLDOUT_REGISTRY_BASELINE,
+    HOLDOUT_REGISTRY_BALANCED,
+    HOLDOUT_INFERENCE_BASELINE_DIR,
+    HOLDOUT_INFERENCE_BALANCED_DIR,
+    HOLDOUT_FRAGMENTS_BASELINE,
+    HOLDOUT_FRAGMENTS_BALANCED,
+    HOLDOUT_REJECTED_AUDIT_BASELINE,
+    HOLDOUT_REJECTED_AUDIT_BALANCED
 )
 
 from src.config.text_standards import (
@@ -36,7 +44,9 @@ from src.config.text_standards import (
     DOC_STATES,
     BATCH_SIZE_DOCS,
     EXPERIMENT_NAME_INFERENCE_BASELINE,
-    EXPERIMENT_NAME_INFERENCE_BALANCED
+    EXPERIMENT_NAME_INFERENCE_BALANCED,
+    EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT, 
+    EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT
 )
 
 # Importar el motor de fragmentación
@@ -52,12 +62,26 @@ def main(model_type):
         fragments_path = FRAGMENTS_BALANCED
         rejected_path = REJECTED_AUDIT_BALANCED
         experiment_name = EXPERIMENT_NAME_INFERENCE_BALANCED
-    else:
+    elif model_type == "baseline":
         registry_path = MASTER_REGISTRY_BASELINE
         inference_dir = INFERENCE_BASELINE_DIR
         fragments_path = FRAGMENTS_BASELINE
         rejected_path = REJECTED_AUDIT_BASELINE
         experiment_name = EXPERIMENT_NAME_INFERENCE_BASELINE
+    elif model_type == "balanced_holdout":
+        registry_path = HOLDOUT_REGISTRY_BALANCED
+        inference_dir = HOLDOUT_INFERENCE_BALANCED_DIR
+        fragments_path = HOLDOUT_FRAGMENTS_BALANCED
+        rejected_path = HOLDOUT_REJECTED_AUDIT_BALANCED
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT
+    elif model_type == "baseline_holdout":
+        registry_path = HOLDOUT_REGISTRY_BASELINE
+        inference_dir = HOLDOUT_INFERENCE_BASELINE_DIR
+        fragments_path = HOLDOUT_FRAGMENTS_BASELINE
+        rejected_path = HOLDOUT_REJECTED_AUDIT_BASELINE
+        experiment_name = EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
 
     # 2. Crear el directorio de salida aislado si no existe
     inference_dir.mkdir(parents=True, exist_ok=True)
@@ -169,9 +193,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model", 
         type=str, 
-        choices=["baseline", "balanced"],
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
         required=True,
-        help="Selecciona el entorno del modelo: 'baseline' o 'balanced'."
+        help="Selecciona el entorno: 'baseline', 'balanced', o el lote final "
+             "de holdout ('baseline_holdout' / 'balanced_holdout')."
     )
     
     args = parser.parse_args()

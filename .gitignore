@@ -247,3 +247,6 @@ contexto_legal_nlp.xml
 
 # Transcrición codigo run_pipeline en archivo de texto  
 run_pipeline.txt     
+
+# Ignorar salidas de inferencia del lote final de holdout (regenerable)
+data/holdout_final/

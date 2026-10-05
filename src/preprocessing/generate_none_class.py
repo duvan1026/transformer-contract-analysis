@@ -74,10 +74,11 @@ def build_forbidden_zones(df_taxonomy: pd.DataFrame) -> dict:
     forbidden_zones = {}
     for _, row in df_taxonomy.iterrows():
         doc_id = row["id_documento"]
+        
         # El inicio es el offset guardado
         start = int(row["offset"])
         # El fin se calcula con la longitud exacta del texto guardado
-        end = start + len(str(row["span_text"]))
+        end = int(row["offset_end"])
         
         if doc_id not in forbidden_zones:
             forbidden_zones[doc_id] = []

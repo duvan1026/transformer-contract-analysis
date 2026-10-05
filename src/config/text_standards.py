@@ -3,9 +3,13 @@ Estándares técnicos para el procesamiento de texto y fragmentación.
 Define los requisitos mínimos de calidad y límites físicos del modelo.
 """
 
-# --- LÍMITES DEL MODELO ---
-# Tamaño máximo de secuencia para BERT (coherencia entre train e inferencia)
-MAX_TOKENS = 512
+
+# Límite máximo de tokens de entrada al modelo, incluidos [CLS] y [SEP].
+MAX_MODEL_TOKENS = 512
+
+# Máximo de tokens de contenido antes de añadir los tokens especiales.
+MAX_CONTENT_TOKENS = MAX_MODEL_TOKENS - 2  # 510
+
 
 # --- REGLAS DE CALIDAD (Filtros de Auditoría) ---
 # Longitud mínima de caracteres para que un fragmento no sea considerado "basura"
@@ -28,8 +32,6 @@ SENTENCE_BOUNDARY_REGEX = r'[^.!?\n]+[.!?\n]*'
 # Caracteres a ignorar al verificar si un texto es solo numérico
 NUMERIC_CLEAN_REGEX = r'[.,\s\-\/]'
 
-########### Warning ###################
-# To Do: MODEL_NAME = "bert-base-uncased" tanto aquí como en label_mapping.py. No es un error grave, pero te sugiero borrarlo de uno de los dos lados para mantener la "Única Fuente de Verdad" (recomiendo dejarlo en label_mapping.py o cambiarle el nombre aquí a TOKENIZER_CHECKPOINT si lo quieres separar).
 # Configuración del modelo base
 MODEL_NAME = "bert-base-uncased"
 
@@ -37,6 +39,10 @@ MODEL_NAME = "bert-base-uncased"
 BATCH_SIZE_DOCS = 100
 EXPERIMENT_NAME_INFERENCE_BASELINE = "v2_inference_Baseline"
 EXPERIMENT_NAME_INFERENCE_BALANCED = "v2_inference_Balanced"
+
+N_HOLDOUT = 100
+EXPERIMENT_NAME_INFERENCE_BASELINE_HOLDOUT = "v2_inference_Baseline_Holdout"
+EXPERIMENT_NAME_INFERENCE_BALANCED_HOLDOUT = "v2_inference_Balanced_Holdout"
 
 # --- FLUJO DE DOCUMENTOS (Registro Maestro) ---
 DOC_STATES = {
@@ -49,13 +55,10 @@ DOC_STATES = {
 
 # --- CONFIGURACIÓN CRÍTICA PARA LA GENERACIÓN DE LA CLASE NONE ---
 
-# Tamaño mínimo en caracteres para simular un párrafo denso
-# Alrededor de 40-50 palabras para evitar el "atajo de longitud" (shortcut Learning)
+# Longitud mínima de los candidatos utilizados para generar la clase NONE.
 NONE_MIN_CHARS_THRESHOLD = 40
 
-# Densidad alfabética mínima requerida
-# Basado en los estándares de limpieza de Gopher (DeepMind) y ROOTS (BigScience)
-# 0.70 significa que el 70% del párrafo deben ser letras de la A a la Z
+# Densidad alfabética mínima requerida para aceptar un candidato NONE.
 NONE_MIN_ALPHA_DENSITY = 0.70
 
 # Expresión regular para aislar únicamente letras puras (usada para calcular la densidad)
@@ -70,8 +73,7 @@ CONFIDENCE_THRESHOLD = 0.75
 # Lista de umbrales de confianza a evaluar en la Fase 3 de forma secuencial.
 CONFIDENCE_THRESHOLDS = [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
 
-# Cantidad de fragmentos de texto que BERT procesará en paralelo por cada iteración.
-# Un valor de 16 optimiza el uso de la GPU (VRAM) sin riesgo de saturar la memoria (Out of Memory).
+# Número de fragmentos procesados simultáneamente durante la inferencia.
 BATCH_SIZE_INFERENCE = 16
 
 # Cuántos candidatos buscar por contrato (Recall@K)
@@ -97,3 +99,34 @@ RECALL_BY_LENGTH_BINS = [0, 50, 100, 150, 250, 400, 600]
 # Tamaño mínimo de muestra que debe tener un bin para considerarlo confiable
 # al determinar automáticamente la zona de riesgo (bin de menor recall).
 RECALL_BY_LENGTH_MIN_N_BIN = 15
+
+
+# ==============================================================================
+# REBALANCEO DE SPANS/FRAGMENTOS LARGOS (post train/val/test e inferencia, ver src/utils/rebalancing/).
+# ==============================================================================
+
+# Objetivo de reparto (umbral blando): decide en cuántos grupos se divide
+# una unidad y qué tan parejos quedan esos grupos entre sí. Una unidad por
+# encima de este número NO se corta automáticamente -- solo se corta si,
+# además, alguna de sus partes irreducibles supera FRAGMENT_REBALANCE_MAX_TOKENS.
+FRAGMENT_REBALANCE_TARGET_TOKENS = 250
+
+
+# Límite máximo de tokens de CONTENIDO que una pieza puede tener tras el
+# rebalanceo, antes de tokenizarse para el modelo. Se deriva de
+# MAX_CONTENT_TOKENS (= MAX_MODEL_TOKENS - 2, reservando [CLS]/[SEP]) 
+FRAGMENT_REBALANCE_MAX_TOKENS = MAX_CONTENT_TOKENS  # 510
+ 
+# Si es False, los spans de categorías positivas no se dividen durante
+# el rebalanceo de entrenamiento para preservar la evidencia que justifica
+# su etiqueta.
+REBALANCE_INCLUDE_POSITIVE_CATEGORIES = False
+ 
+# Delimitador de la única cláusula de respaldo, usada solo cuando una
+# oración completa, por sí sola, ya supera FRAGMENT_REBALANCE_MAX_TOKENS y
+# no hay ningún punto, signo de exclamación o interrogación dentro de ella
+# para dividirla. Se retiró el nivel adicional que buscaba comas: cortar por
+# coma aumenta el riesgo de partir una referencia cruzada o un término legal
+# a la mitad, y con la distinción objetivo/límite físico de arriba, este
+# nivel de respaldo ya casi nunca hace falta.
+CLAUSE_BOUNDARY_SEMICOLON_REGEX = r'[^;]+;?'

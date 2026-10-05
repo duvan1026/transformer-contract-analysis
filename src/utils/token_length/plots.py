@@ -283,8 +283,9 @@ def graficar_composicion_relativa(df_composicion: pd.DataFrame, output_path,
 def graficar_riesgo_truncamiento(df_riesgo: pd.DataFrame, output_path, title_suffix: str = ""):
     """
     Barras agrupadas (clase x fuente), solo train/val/test, con la cantidad
-    de spans que superan el limite fisico de tokens del modelo (MAX_TOKENS)
-    y por tanto se truncan/descartan silenciosamente al entrenar.
+    de spans que superan el limite de tokens de contenido admitido antes de
+    tokenizar (MAX_CONTENT_TOKENS) y que, por tanto, se truncarian
+    silenciosamente al entrenar ([CLS]/[SEP] no caben ya en MAX_MODEL_TOKENS).
     """
     sns.set_theme(style="white")
 
@@ -319,7 +320,7 @@ def graficar_riesgo_truncamiento(df_riesgo: pd.DataFrame, output_path, title_suf
     ax.set_xticks(range(len(clases)))
     ax.set_xticklabels(clases, rotation=30, ha="right", fontsize=10)
     ax.set_ylabel("Cantidad de spans que exceden el limite", fontsize=11, labelpad=15, weight="bold")
-    ax.set_title(f"Spans en riesgo de truncamiento al entrenar (>MAX_TOKENS) {title_suffix}",
+    ax.set_title(f"Spans en riesgo de truncamiento al entrenar (>MAX_MODEL_TOKENS) {title_suffix}",
                  fontsize=13, pad=20, weight="bold")
     ax.legend(loc="upper right")
 

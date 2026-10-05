@@ -7,13 +7,34 @@ set -e # Detiene la ejecución si hay algún error
 EXPERIMENT=$1
 
 # Validar argumento
-if [ "$EXPERIMENT" != "baseline" ] && [ "$EXPERIMENT" != "balanced" ]; then
+VALID_EXPERIMENTS="baseline balanced baseline_holdout balanced_holdout build_holdout"
+EXPERIMENTO_VALIDO=false
+for e in $VALID_EXPERIMENTS; do
+    if [ "$EXPERIMENT" == "$e" ]; then
+        EXPERIMENTO_VALIDO=true
+    fi
+done
+
+if [ "$EXPERIMENTO_VALIDO" != "true" ]; then
     echo "================================================================"
     echo "ERROR: Debes especificar el tipo de experimento."
-    echo "Uso: ./run_pipeline.sh [baseline | balanced]"
+    echo "Uso: ./run_pipeline.sh [baseline | balanced | baseline_holdout | balanced_holdout | build_holdout]"
     echo "================================================================"
     exit 1
 fi
+
+# ==============================================================================
+# CONFIGURACIÓN DEL LOG
+# ==============================================================================
+
+LOG_DIR="logs"
+mkdir -p "$LOG_DIR"
+
+LOG_FILE="$LOG_DIR/pipeline_${EXPERIMENT}_$(date '+%Y%m%d_%H%M%S').log"
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "Archivo de log: $LOG_FILE"
 
 # ==============================================================================
 # FUNCIÓN AUXILIAR: MIDE TIEMPO Y REGISTRA FECHA/HORA
@@ -71,6 +92,7 @@ elif [ "$EXPERIMENT" == "balanced" ]; then
     run_step "[2/4] Generar Clase NONE" python src/preprocessing/inject_none_class.py
     run_step "[2/4] Validar Dataset" python src/preprocessing/validate_dataset.py
     run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/split_dataset_stratified.py
+    run_step "[2/4] Dividir Dataset por Densidad" python src/preprocessing/rebalance_long_spans.py  
     run_step "[2/4] Entrenar BERT Balanced" python src/training/train_bert_balanced.py
 fi
 
@@ -80,6 +102,7 @@ run_step "[3/4] Evaluando Modelo (Test)" python src/evaluation/evaluate_test.py 
 
 run_step "[4/4] Inicializar Registro Maestro" python src/data/00_init_master_registry.py --model "$EXPERIMENT"
 run_step "[4/4] Preparar Lote de Documentos" python src/inference/01_prepare_batch_documents.py --model "$EXPERIMENT"
+run_step "[4/4] Preparar Lote de Documentos" python src/inference/01b_rebalance_fragments.py --model "$EXPERIMENT"
 run_step "[4/4] Inferencia Pura (Softmax)" python src/inference/02_run_inference.py --model "$EXPERIMENT"
 run_step "[4/4] Calcular Ground Truth Espacial" python src/inference/03_calculate_ground_truth.py --model "$EXPERIMENT"
 run_step "[4/4] Generar Reportes y JSONs" python src/inference/04_generate_reports.py --model "$EXPERIMENT"

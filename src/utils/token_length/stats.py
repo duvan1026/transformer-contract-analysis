@@ -21,8 +21,9 @@ def calcular_estadisticos(df_fuente, umbral_palabras, zona_riesgo_tokens, max_to
     umbral_palabras: umbral de palabras de referencia (TOKEN_LENGTH_WORD_THRESHOLD).
     zona_riesgo_tokens: tupla (min, max) del rango de tokens de referencia
                         (TOKEN_LENGTH_RISK_ZONE_TOKENS).
-    max_tokens: limite fisico del modelo (MAX_TOKENS), para detectar truncamiento
-                en spans de train/val/test que no pasan por fragment_single_document.
+    max_tokens: limite de tokens de CONTENIDO (MAX_CONTENT_TOKENS), para detectar
+                fragmentos/spans que superarian el limite de contenido admitido antes
+                de tokenizar, en train/val/test que no pasan por fragment_single_document.
     """
     filas = []
     for clase, grupo in df_fuente.groupby("clase"):
@@ -141,7 +142,7 @@ def construir_tabla_riesgo_truncamiento(stats_por_fuente):
     """
     Extrae Cantidad_Excede_Limite_Tokens por clase, solo de train/val/test
     (inferencia no aplica: fragment_single_document ya garantiza que
-    ningun fragmento de inferencia supera MAX_TOKENS por diseño).
+    ningun fragmento de inferencia supera MAX_CONTENT_TOKENS por diseño).
     """
     fuentes_aplicables = ["train", "val", "test"]
     piezas = []

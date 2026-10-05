@@ -17,12 +17,20 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 from src.config.paths import (
     GROUND_TRUTH_BASELINE,
     GROUND_TRUTH_BALANCED,
+    ANNOTATION_REGISTRY_BASELINE,
+    ANNOTATION_REGISTRY_BALANCED,
     INFERENCE_BASELINE_DIR,
     INFERENCE_BALANCED_DIR,
     INFERENCE_METRICS_REPORT,
     INFERENCE_CONFUSION_MATRIX_IMAGE,
     REPORT_FULL_CONFIDENCE_NAME,
-    REPORT_THRESHOLD_PREFIX
+    REPORT_THRESHOLD_PREFIX,
+    HOLDOUT_GROUND_TRUTH_BASELINE, 
+    HOLDOUT_GROUND_TRUTH_BALANCED, 
+    HOLDOUT_ANNOTATION_REGISTRY_BASELINE, 
+    HOLDOUT_ANNOTATION_REGISTRY_BALANCED, 
+    HOLDOUT_INFERENCE_BASELINE_DIR, 
+    HOLDOUT_INFERENCE_BALANCED_DIR
 )
 from src.config.text_standards import CONFIDENCE_THRESHOLDS
 
@@ -33,48 +41,48 @@ from src.utils.visualization_utils import save_confusion_matrix_image
 from src.utils.export_utils import generate_contract_jsons
 
 
-def procesar_baseline(df: pd.DataFrame, out_dir: Path, id2label: dict):
+def procesar_baseline(df: pd.DataFrame, annotation_registry: pd.DataFrame, out_dir: Path, id2label: dict):
     print(f"[*] Ejecutando evaluación dinámica Baseline para umbrales: {CONFIDENCE_THRESHOLDS}")
-    
+
     for umbral in CONFIDENCE_THRESHOLDS:
         print(f"\n -> Generando reporte para umbral: {int(umbral * 100)}%")
-        
+
         df_sim = apply_dynamic_threshold(df, umbral)
-        
+
         # Uso de la variable global para el prefijo de la carpeta
         nombre_carpeta = f"{REPORT_THRESHOLD_PREFIX}{int(umbral * 100)}"
         carpeta_experimento = out_dir / nombre_carpeta
         carpeta_experimento.mkdir(parents=True, exist_ok=True)
-        
+
         reporte_final = f"REPORTE DE EVALUACIÓN BASELINE - UMBRAL: {umbral}\n\n"
         reporte_final += get_classification_report(df_sim)
-        reporte_final += get_recall_at_k_report(df_sim, id2label)
-        
+        reporte_final += get_recall_at_k_report(df_sim, id2label, annotation_registry)
+
         with open(carpeta_experimento / INFERENCE_METRICS_REPORT.name, "w", encoding="utf-8") as f:
             f.write(reporte_final)
-            
+
         ruta_img = carpeta_experimento / INFERENCE_CONFUSION_MATRIX_IMAGE.name
         save_confusion_matrix_image(df_sim, ruta_img, id2label, f"(Umbral {int(umbral * 100)}%)")
         generate_contract_jsons(df_sim, umbral, carpeta_experimento, id2label)
-        
 
-def procesar_balanced(df: pd.DataFrame, out_dir: Path, id2label: dict):
+
+def procesar_balanced(df: pd.DataFrame, annotation_registry: pd.DataFrame, out_dir: Path, id2label: dict):
     print("[*] Ejecutando evaluación estática Balanced (Confianza Plena)...")
-    
+
     df["pred_final"] = df["pred_raw"]
-    
+
     # Uso estricto de la variable global de paths.py
     carpeta_experimento = out_dir / REPORT_FULL_CONFIDENCE_NAME
     carpeta_experimento.mkdir(parents=True, exist_ok=True)
-    
+
     reporte_final = "REPORTE DE EVALUACIÓN BALANCED - CONFIANZA PLENA\n\n"
     reporte_final += get_classification_report(df)
     reporte_final += get_confidence_distribution_report(df)
-    reporte_final += get_recall_at_k_report(df, id2label)
-    
+    reporte_final += get_recall_at_k_report(df, id2label, annotation_registry)
+
     with open(carpeta_experimento / INFERENCE_METRICS_REPORT.name, "w", encoding="utf-8") as f:
         f.write(reporte_final)
-        
+
     ruta_img = carpeta_experimento / INFERENCE_CONFUSION_MATRIX_IMAGE.name
     save_confusion_matrix_image(df, ruta_img, id2label, "(Confianza Plena)")
     generate_contract_jsons(df, 1.0, carpeta_experimento, id2label)
@@ -83,32 +91,57 @@ def procesar_balanced(df: pd.DataFrame, out_dir: Path, id2label: dict):
 def main(model_type):
     print(f"[*] Fase 3B: Inteligencia de Negocio - MODO: {model_type.upper()}")
 
-    # Enrutamiento dinámico completo
     if model_type == "balanced":
         input_path = GROUND_TRUTH_BALANCED
+        annotation_registry_path = ANNOTATION_REGISTRY_BALANCED
         out_dir = INFERENCE_BALANCED_DIR
         current_id2label = ID2LABEL_BALANCED
-    else:
+    elif model_type == "baseline":
         input_path = GROUND_TRUTH_BASELINE
+        annotation_registry_path = ANNOTATION_REGISTRY_BASELINE
         out_dir = INFERENCE_BASELINE_DIR
         current_id2label = ID2LABEL_BASELINE
+    elif model_type == "balanced_holdout":
+        input_path = HOLDOUT_GROUND_TRUTH_BALANCED
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BALANCED
+        out_dir = HOLDOUT_INFERENCE_BALANCED_DIR
+        current_id2label = ID2LABEL_BALANCED
+    elif model_type == "baseline_holdout":
+        input_path = HOLDOUT_GROUND_TRUTH_BASELINE
+        annotation_registry_path = HOLDOUT_ANNOTATION_REGISTRY_BASELINE
+        out_dir = HOLDOUT_INFERENCE_BASELINE_DIR
+        current_id2label = ID2LABEL_BASELINE
+    else:
+        raise ValueError(f"model_type no reconocido: {model_type}")
 
     if not input_path.exists():
         print(f"[ERROR] Archivo Ground Truth no encontrado: {input_path}")
         return
 
-    df = pd.read_csv(input_path)
+    if not annotation_registry_path.exists():
+        print(f"[ERROR] Archivo de registro de anotaciones no encontrado: {annotation_registry_path}")
+        print("        Ejecuta primero 03_calculate_ground_truth.py para generarlo.")
+        return
 
-    if model_type == "baseline":
-        procesar_baseline(df, out_dir, current_id2label)
+    df = pd.read_csv(input_path)
+    annotation_registry = pd.read_csv(annotation_registry_path)
+
+    if model_type in ("baseline", "baseline_holdout"):
+        procesar_baseline(df, annotation_registry, out_dir, current_id2label)
+    elif model_type in ("balanced", "balanced_holdout"):
+        procesar_balanced(df, annotation_registry, out_dir, current_id2label)
     else:
-        procesar_balanced(df, out_dir, current_id2label)
-        
+        raise ValueError(f"model_type no reconocido: {model_type}")
+
     print("\n[+] Reportes y JSONs generados con éxito.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, choices=["baseline", "balanced"], default="baseline")
+    parser.add_argument(
+        "--model", type=str,
+        choices=["baseline", "balanced", "baseline_holdout", "balanced_holdout"],
+        default="baseline"
+    )
     args = parser.parse_args()
     main(args.model)

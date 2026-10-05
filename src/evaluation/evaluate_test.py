@@ -48,7 +48,6 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name, lab
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Evaluando en: {device}")
 
-    # 1. Cargar Tokenizer y Modelo
     # Cargamos el tokenizador y el modelo desde la carpeta donde se guardó el mejor checkpoint
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     model = AutoModelForSequenceClassification.from_pretrained(model_dir).to(device)
@@ -56,9 +55,8 @@ def run_evaluation(model_dir, output_csv, output_cm, output_txt, model_name, lab
     #  modelo en modo evaluación para desactivar capas de Dropout
     model.eval()
 
-    # 2. Preparar Dataset y DataLoader
     test_dataset = ContractDataset(TEST_DATASET, tokenizer=tokenizer, label2id=label2id)
-    # batch_size=16 es un balance seguro entre velocidad y uso de memoria VRAM
+    # Procesamiento por lotes durante la evaluación.
     test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
     all_preds = []          # Guardará los IDs de las clases predichas
@@ -155,14 +153,12 @@ if __name__ == "__main__":
         "--model", 
         type=str, 
         choices=["baseline", "balanced"], 
-        default="baseline",  # <-- Aquí está la magia que solicitaste
+        default="baseline",
         help="Elige qué modelo evaluar: 'baseline' (por defecto) o 'balanced'."
     )
     
-    # Leer lo que el usuario escribió en la consola
     args = parser.parse_args()
 
-    # 2. Enrutar las variables según la elección
     if args.model == "baseline":
         run_evaluation(
             model_dir=MODEL_BERT_BASELINE_DIR,

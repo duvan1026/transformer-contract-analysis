@@ -70,7 +70,7 @@ from src.config.paths import (
 )
 from src.config.text_standards import (
     MODEL_NAME,
-    MAX_TOKENS,
+    MAX_CONTENT_TOKENS,
     TOKEN_LENGTH_WORD_THRESHOLD,
     TOKEN_LENGTH_RISK_ZONE_TOKENS,
 )
@@ -198,7 +198,7 @@ def main(model_type):
     for fuente in ["train", "val", "test", "inferencia"]:
         sub = df_todas_fuentes[df_todas_fuentes["fuente"] == fuente]
         stats_por_fuente[fuente] = calcular_estadisticos(
-            sub, TOKEN_LENGTH_WORD_THRESHOLD, zona_riesgo_tokens, MAX_TOKENS
+            sub, TOKEN_LENGTH_WORD_THRESHOLD, zona_riesgo_tokens, MAX_CONTENT_TOKENS
         )
 
     resumen_comparativo = construir_resumen_comparativo(stats_por_fuente)
@@ -209,7 +209,7 @@ def main(model_type):
         stats_por_fuente, resumen_comparativo, stats_path,
         umbral_palabras=TOKEN_LENGTH_WORD_THRESHOLD,
         zona_riesgo_tokens=zona_riesgo_tokens,
-        max_tokens=MAX_TOKENS,
+        max_tokens=MAX_CONTENT_TOKENS,
     )
 
     # 6. Graficas (sin IDs de hallazgo, etiqueta descriptiva dinamica)
