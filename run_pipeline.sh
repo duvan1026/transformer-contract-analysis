@@ -75,7 +75,40 @@ echo "🚀 Iniciando Pipeline NLP - Modo: $EXPERIMENT"
 echo "   Fecha y Hora de inicio: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "================================================================"
 
-run_step "[0/4] Limpiando salidas locales" bash -c "rm -rf data/processed/* models/* docs/reports/* && mkdir -p data/processed models docs/reports"
+# --- RAMA: CONSTRUCCIÓN DEL LOTE DE HOLDOUT (Fase 1 + Fase 2, una sola vez) ---
+if [ "$EXPERIMENT" == "build_holdout" ]; then
+    run_step "[H/2] Auditoría de holdout" python src/data/build_holdout_audit.py
+    run_step "[H/2] Selección reproducible de 100 IDs" python src/data/build_holdout_registry.py
+
+    echo "================================================================"
+    echo "🎉 Construcción del lote de holdout finalizada con éxito."
+    echo "   Hora de fin: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "================================================================"
+    exit 0
+fi
+
+# --- RAMA: INFERENCIA SOBRE EL LOTE DE HOLDOUT (Baseline o Balanced) ---
+if [ "$EXPERIMENT" == "baseline_holdout" ] || [ "$EXPERIMENT" == "balanced_holdout" ]; then
+    run_step "[H/4] Preparar Lote de Documentos (Holdout)" python src/inference/01_prepare_batch_documents.py --model "$EXPERIMENT"
+    run_step "[H/4] Rebalancear Fragmentos (Holdout)" python src/inference/01b_rebalance_fragments.py --model "$EXPERIMENT"
+    run_step "[H/4] Inferencia Pura (Softmax) (Holdout)" python src/inference/02_run_inference.py --model "$EXPERIMENT"
+    run_step "[H/4] Calcular Ground Truth Espacial (Holdout)" python src/inference/03_calculate_ground_truth.py --model "$EXPERIMENT"
+    run_step "[H/4] Generar Reportes y JSONs (Holdout)" python src/inference/04_generate_reports.py --model "$EXPERIMENT"
+
+    PIPELINE_END_TIME=$(date +%s)
+    TOTAL_DURATION=$((PIPELINE_END_TIME - PIPELINE_START_TIME))
+    TOTAL_MINS=$((TOTAL_DURATION / 60))
+    TOTAL_SECS=$((TOTAL_DURATION % 60))
+
+    echo "================================================================"
+    echo "🎉 ¡Inferencia de holdout ($EXPERIMENT) finalizada con éxito!"
+    echo "   Hora de fin: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "⏱️  TIEMPO TOTAL: ${TOTAL_MINS}m ${TOTAL_SECS}s (${TOTAL_DURATION}s)"
+    echo "================================================================"
+    exit 0
+fi
+
+run_step "[0/4] Limpiando salidas locales" bash -c "rm -rf data/processed/splits/* data/processed/inference/${EXPERIMENT}/* models/bert_${EXPERIMENT}/* docs/reports/* && mkdir -p data/processed/splits data/processed/inference/${EXPERIMENT} models/bert_${EXPERIMENT} docs/reports"
 
 run_step "[1/4] Extraer Spans" python src/preprocessing/extract_spans.py
 run_step "[1/4] Aplicar Mapeo de Categorías" python src/preprocessing/apply_category_mapping.py
