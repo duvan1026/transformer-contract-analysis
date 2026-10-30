@@ -250,3 +250,6 @@ run_pipeline.txt
 
 # Ignorar salidas de inferencia del lote final de holdout (regenerable)
 data/holdout_final/
+
+# Raw datasets
+data/raw/
